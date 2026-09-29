@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><parameters><parameter>
+    <key/>
+    <name>S4_HOSTNAME</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Base address of your SAP S/4HANA system, including the protocol — for example https://my123456-api.s4hana.cloud.sap. Must start with https://; the flow refuses to start a delivery against a plain http:// address so that credentials and business data are never sent unencrypted. The one exception is a system behind an SAP Cloud Connector (proxy type sapcc): there, enter the virtual host defined in the Cloud Connector, written with http:// — for example http://s4hana.virtual:44300. Nothing travels unencrypted, the Cloud Connector's tunnel does the encrypting.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CREDENTIAL_ALIAS</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Name of the security material in this tenant that holds the sign-in details for SAP S/4HANA. Create it under Monitor, Manage Security, Security Material. The material's type must match the authentication method selected on the SAP S/4HANA receiver: OAuth2 Client Credentials for the shipped default, User Credentials when you switch the receiver to Basic. Not used when the receiver is switched to Client Certificate.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>HTTP_TIMEOUT_MS</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How long one call may take before it is abandoned, in milliseconds, 1000 to 3600000: a page arriving from SAP S/4HANA, and each call to Keboola, including the wait for the table to be created on a first run. Keboola answers an import only when it has finished it, which can take the better part of a minute. Nothing waits on this flow, so the value only bounds a single call: one that takes longer is treated as a passing failure, and the run goes back on the queue to be retried. Raise it for a slow system or a very large page size.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_PROXY_TYPE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How this tenant reaches your SAP S/4HANA system. Use default when the system is reachable over the internet, or sapcc when it sits behind an SAP Cloud Connector. Where the screen offers a list, these are its entries Internet and On-Premise.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CC_LOCATION_ID</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Location identifier of the SAP Cloud Connector to use. Leave empty unless you run more than one Cloud Connector against this tenant and set the proxy type to sapcc.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_KEY</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Integration key issued by SAP for this package, sent with every call so SAP can recognise the integration. Leave empty unless the documentation of this package gives you a key.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_HEADER_NAME</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Name of the request header the integration key is sent in, as stated in the instructions SAP supplies with the key. Nothing is sent unless both this and the key are filled in.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_SAP_CLIENT</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Client number of the SAP system to sign in to, for example 100. Needed only on an on-premise or private-edition system with more than one client; leave empty for SAP S/4HANA Cloud and for single-client systems. When set it is sent as sap-client with every call.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>SERVICE_PATH</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Path of the SAP S/4HANA service to read from, without the host — for example /sap/opu/odata/sap/API_BUSINESS_PARTNER. The service must be released to the communication user this connection signs in as.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>ENTITY_SET</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Name of the collection to read from that service, for example A_BusinessPartner.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>ODATA_SELECT</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Comma separated list of fields to read. Leave empty to take every field the service returns. Naming the fields is worth doing: it fixes the column order of the target table, and it stops a later SAP release from silently adding columns. Include the columns named in PRIMARY_KEY.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>ODATA_FILTER</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Optional condition limiting which records are read, in the query language the SAP service expects — for example Country eq 'DE'. Combined with the incremental condition when incremental loading is on.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>LOAD_MODE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>full reads everything every time and replaces the table's contents with what it read; a run that reads no records leaves the table as it was. incremental reads only records changed since the last successful run, using the fields named in DELTA_FIELD, and updates the table by primary key — so it needs both a change field maintained by SAP and a primary key.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELTA_FIELD</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Field that says when a record last changed, used for incremental loading. Several fields can be named, separated by commas; a record is read when any of them falls into the period. Name the creation field as well when the change field stays empty until a record is changed for the first time, as on many SAP services. Ignored when the load mode is full.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELTA_FIELD_TYPE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How the change field is typed in the SAP service, which decides how the condition is written: datetime for a date-and-time field without time zone (the usual case on SAP services, for example LastChangeDate), datetimeoffset for one with a time zone (for example LastChangeDateTime), date for a pure date. All fields named in DELTA_FIELD must be of this type. Ignored when the load mode is full.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELTA_PRECISION</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How finely the change field is maintained. day means SAP records only the date of a change, so each run reads again from the day before the previous run started — safe, because the primary key turns repeats into updates. second means SAP records the exact time in universal time (a field with a time zone), so each run reads only what changed since the previous run started. Choose day unless you know the field carries such a time. Ignored when the load mode is full.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>PAGE_SIZE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How many records to read per request, 1 to 100000. When the service pages its answer itself it sends a link to the next page, and the flow follows that link instead — so a page smaller than asked for, followed by a link, is normal.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELIVERY_QUEUE_NAME</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Name of the queue that holds delivery runs between being started and being carried out. Each run is one message; one that failed and waits for its next attempt is visible under Monitor, Manage Message Queues. Give every copy of this flow in the tenant a queue name of its own: copies that share a queue carry out each other's runs.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELIVERY_RETRY_INTERVAL_MIN</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How long the platform waits before the first retry of a delivery run that failed for a reason that may pass (a server error, a dropped line, a timeout), in minutes. Each further wait is double the previous one, up to the maximum retry interval (DELIVERY_MAX_RETRY_INTERVAL_MIN). A run that fails for a reason that will not change (not authorized, wrong path, wrong table) ends visibly in the monitor and is not retried.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>DELIVERY_MAX_RETRY_INTERVAL_MIN</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>The longest wait between two retries of a failed delivery run, in minutes. Retries continue at this interval until the run succeeds or the queued message expires after 90 days.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>KEBOOLA_STACK_URL</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Address of your Keboola project's region, for example https://connection.eu-central-1.keboola.com. Must start with https://. The address that receives the data is looked up from it, so it does not have to be configured separately.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>KEBOOLA_TABLE_ID</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Table the data is written to, as Keboola shows its identifier — for example in.c-sap.business_partner. The bucket must exist; the table is created on the first run if it does not exist, with every column as text and PRIMARY_KEY as its key.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>KEBOOLA_CREDENTIAL_ALIAS</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Name of the security material in this tenant holding the Keboola Storage token. Create it under Monitor, Manage Security, Security Material as User Credentials with any user name and the token as the password. The token needs write access to the target bucket and nothing else.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>KEBOOLA_IMPORTER_URL</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Only needed if the address that receives the data cannot be looked up from KEBOOLA_STACK_URL, or you want to override it. Must start with https://. Leave empty otherwise.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>PRIMARY_KEY</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Comma separated columns that identify a record uniquely. Used when the table is created, and to read the records in a fixed order so that pages do not overlap. With a primary key, delivering the same record twice updates it; without one, it is added again. A table that already exists must have the same key in Keboola; the run ends with an error naming both when they differ. Required for incremental loading.</description>
+    <additionalMetadata/>
+  </parameter><param_references><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpAddressWithoutQuery" attribute_uilabel="Address" param_key="S4_HOSTNAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_HOSTNAME"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::credentialName" attribute_uilabel="Credential Name" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpRequestTimeout" attribute_uilabel="Timeout (in ms)" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::proxyType" attribute_uilabel="Proxy Type" param_key="S4_PROXY_TYPE"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_PROXY_TYPE"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::locationID" attribute_uilabel="Location ID" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_KEY"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_HEADER_NAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_SAP_CLIENT"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="SERVICE_PATH"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="ENTITY_SET"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="ODATA_SELECT"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="ODATA_FILTER"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="LOAD_MODE"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="DELTA_FIELD"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="DELTA_FIELD_TYPE"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="DELTA_PRECISION"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="PAGE_SIZE"/><reference attribute_category="Sender" attribute_id="ctype::AdapterVariant/cname::sap:JMS/tp::Not Applicable/mp::Not Applicable/direction::Sender/version::1.4.0/attrId::QueueName_inbound" attribute_uilabel="Queue Name" param_key="DELIVERY_QUEUE_NAME"/><reference attribute_category="Sender" attribute_id="ctype::AdapterVariant/cname::sap:JMS/tp::Not Applicable/mp::Not Applicable/direction::Sender/version::1.4.0/attrId::RetryInterval" attribute_uilabel="Retry Interval (in min)" param_key="DELIVERY_RETRY_INTERVAL_MIN"/><reference attribute_category="Sender" attribute_id="ctype::AdapterVariant/cname::sap:JMS/tp::Not Applicable/mp::Not Applicable/direction::Sender/version::1.4.0/attrId::MaxRetryInterval" attribute_uilabel="Maximum Retry Interval (in min)" param_key="DELIVERY_MAX_RETRY_INTERVAL_MIN"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="KEBOOLA_STACK_URL"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="KEBOOLA_TABLE_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="KEBOOLA_CREDENTIAL_ALIAS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="KEBOOLA_IMPORTER_URL"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="PRIMARY_KEY"/></param_references></parameters>

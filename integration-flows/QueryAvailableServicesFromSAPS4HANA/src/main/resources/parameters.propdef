@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><parameters><parameter>
+    <key/>
+    <name>S4_HOSTNAME</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Base address of your SAP S/4HANA system, including the protocol — for example https://my123456-api.s4hana.cloud.sap. Must start with https://; a plain http:// address is refused, and a bare host name is given https:// automatically. The one exception is a system behind an SAP Cloud Connector (proxy type sapcc): there, enter the virtual host defined in the Cloud Connector, written with http:// — for example http://s4hana.virtual:44300. Nothing travels unencrypted, the Cloud Connector's tunnel does the encrypting.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CREDENTIAL_ALIAS</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Name of the security material in this tenant that holds the sign-in details for SAP S/4HANA. Create it under Monitor, Manage Security, Security Material. This flow signs in with a user name and password. On a directly reachable system it reads them from this material: User Credentials, or the OAuth2 Client Credentials material of the other two flows when SAP accepts its client ID and secret as user and password. Behind an SAP Cloud Connector (proxy type sapcc) the two receivers HTTP_V2 and HTTP_V4 sign in instead, with the method selected on them: switch both to Basic in the editor and use User Credentials, as the integration guide describes.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>HTTP_TIMEOUT_MS</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How long a single call to SAP S/4HANA may take before it is abandoned, in milliseconds, 1 or more; the check of a single service in the list has limits of its own, which this value does not change. The flow tries each call up to three times (waiting half a second, then one second) before giving up, and one request for the list makes several calls, so against a system that does not answer, a request can outlast the calling application's own timeout; the application then asks again. Lower this value, or raise the application's timeout, if that happens. Keboola's SAP OData component waits 60 seconds unless its own timeout setting says otherwise.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_PROXY_TYPE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How this tenant reaches your SAP S/4HANA system. Use default when the system is reachable over the internet, or sapcc when it sits behind an SAP Cloud Connector. Where the screen offers a list, these are its entries Internet and On-Premise. With sapcc the list of services is read from the system's own Gateway catalogue (OData V2 and V4) through the connection; communication arrangements are not consulted, which is correct for an on-premise or private-edition system.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CC_LOCATION_ID</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Location identifier of the SAP Cloud Connector to use. Leave empty unless you run more than one Cloud Connector against this tenant and set the proxy type to sapcc.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_KEY</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Integration key issued by SAP for this package, sent with every call so SAP can recognise the integration. Leave empty unless the documentation of this package gives you a key.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_HEADER_NAME</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Name of the request header the integration key is sent in, as stated in the instructions SAP supplies with the key. Nothing is sent unless both this and the key are filled in.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_SAP_CLIENT</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Client number of the SAP system to sign in to, for example 100. Needed only on an on-premise or private-edition system with more than one client; leave empty for SAP S/4HANA Cloud and for single-client systems. When set it is sent as sap-client with every call.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>CATALOG_VIEW</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Which services the list shows when it is read from an on-premise system's catalogues. One of three values:
+- interfaces: services meant to be read by other systems (what SAP classifies as a web API, services you built yourself, anything named API_, released OData V4 services).
+- extended: everything except the backends of Fiori apps and OData V4 views that are neither released nor your own (a name that starts with Z or Y).
+- all: everything the catalogues list, including Fiori app backends and raw CDS views.
+On SAP S/4HANA Cloud the three give the same list. A support call can override the value with ?include= on the address.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>CATALOG_CHECK_AUTHORIZATION</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Whether to check, for every service in the list read from an on-premise system's catalogues, that the SAP user is actually allowed to read it, by reading one record. One of two values:
+- true: services the user may not read are left out of the list (the all view keeps them, marked). Costs one or two small requests per listed service, once per cache period.
+- false: the list is shown as the catalogues give it, unchecked.
+Not possible through an SAP Cloud Connector, where the list is always shown unchecked.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>CATALOG_CACHE_TTL_SECONDS</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How long the list of available services is reused before it is looked up again, in seconds. The list changes only when an administrator changes which services your SAP user may reach, so a long value is normal. 0 looks the list up on every call. Not used when the system is reached through an SAP Cloud Connector.</description>
+    <additionalMetadata/>
+  </parameter><param_references><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpAddressWithoutQuery" attribute_uilabel="Address" param_key="S4_HOSTNAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_HOSTNAME"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::credentialName" attribute_uilabel="Credential Name" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpRequestTimeout" attribute_uilabel="Timeout (in ms)" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::proxyType" attribute_uilabel="Proxy Type" param_key="S4_PROXY_TYPE"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_PROXY_TYPE"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::locationID" attribute_uilabel="Location ID" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_KEY"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_HEADER_NAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_SAP_CLIENT"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="CATALOG_VIEW"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="CATALOG_CHECK_AUTHORIZATION"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="CATALOG_CACHE_TTL_SECONDS"/></param_references></parameters>

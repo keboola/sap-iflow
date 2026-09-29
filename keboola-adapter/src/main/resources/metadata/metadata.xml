@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ComponentMetadata ComponentId="ctype::Adapter/cname::Keboola/vendor::Keboola/version::1.0.0" ComponentName="Keboola" UIElementType="Adapter" IsExtension="false" IsFinal="true" IsPreserves="true" IsDefaultGenerator="true" ComponentDisplayName="Keboola" xmlns:gen="http://www.sap.hci.adk.com/gen" xmlns:bp="http://www.adk.gen/xmlns/blueprint">
+    <Variant VariantName="Keboola Receiver" VariantId="ctype::AdapterVariant/cname::Keboola/vendor::Keboola/tp::keboola/mp::keboola/direction::Receiver" IsRequestResponse="true" MetadataVersion="2.0" gen:RuntimeComponentBaseUri="keboola" AttachmentBehavior="Preserve">
+        <InputContent Cardinality="1" Scope="outsidepool" MessageCardinality="1" isStreaming="false">
+            <Content>
+                <ContentType>Any</ContentType>
+                <Schema xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></Schema>
+            </Content>
+        </InputContent>
+        <OutputContent Cardinality="1" Scope="outsidepool" MessageCardinality="1" isStreaming="false">
+            <Content>
+                <ContentType>Any</ContentType>
+                <Schema xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></Schema>
+            </Content>
+        </OutputContent>
+        <Tab id="connection">
+            <GuiLabels guid="5b2d0f4e-8a91-4c33-9f0a-1d2e3c4b5a69">
+                <Label language="EN">Connection</Label>
+                <Label language="DE">Connection</Label>
+            </GuiLabels>
+            <AttributeGroup id="keboolaConnection">
+                <Name xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Keboola Connection</Name>
+                <GuiLabels guid="7c1a9e2b-3d45-4f67-8a90-b1c2d3e4f506">
+                    <Label language="EN">Keboola Connection</Label>
+                    <Label language="DE">Keboola Connection</Label>
+                </GuiLabels>
+                <AttributeReference>
+                    <ReferenceName>stackUrl</ReferenceName>
+                    <description>Address of your Keboola stack, for example https://connection.eu-central-1.keboola.com</description>
+                </AttributeReference>
+                <AttributeReference>
+                    <ReferenceName>credentialName</ReferenceName>
+                    <description>Name of the deployed User Credentials artifact whose password holds the Keboola Storage token</description>
+                </AttributeReference>
+                <AttributeReference>
+                    <ReferenceName>timeoutMs</ReferenceName>
+                    <description>Connection and read timeout in milliseconds</description>
+                </AttributeReference>
+            </AttributeGroup>
+            <AttributeGroup id="keboolaTarget">
+                <Name xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Target Table</Name>
+                <GuiLabels guid="9e8d7c6b-5a49-4382-b716-a5b4c3d2e1f0">
+                    <Label language="EN">Target Table</Label>
+                    <Label language="DE">Target Table</Label>
+                </GuiLabels>
+                <AttributeReference>
+                    <ReferenceName>tableId</ReferenceName>
+                    <description>Full identifier of an existing Storage table, for example in.c-sap.business_partner</description>
+                </AttributeReference>
+                <AttributeReference>
+                    <ReferenceName>incremental</ReferenceName>
+                    <description>Append the delivered rows; when unchecked the table content is replaced by this delivery</description>
+                </AttributeReference>
+            </AttributeGroup>
+        </Tab>
+    </Variant>
+    <AttributeMetadata>
+        <Name>stackUrl</Name>
+        <Usage>false</Usage>
+        <DataType>xsd:string</DataType>
+        <Default></Default>
+        <Length></Length>
+        <isparameterized>true</isparameterized>
+        <GuiLabels guid="1f2e3d4c-5b6a-4798-8091-a2b3c4d5e6f7">
+            <Label language="EN">Keboola Stack URL</Label>
+            <Label language="DE">Keboola Stack URL</Label>
+        </GuiLabels>
+    </AttributeMetadata>
+    <AttributeMetadata>
+        <Name>credentialName</Name>
+        <Usage>false</Usage>
+        <DataType>xsd:string</DataType>
+        <Default>KEBOOLA_STORAGE</Default>
+        <Length></Length>
+        <isparameterized>true</isparameterized>
+        <GuiLabels guid="2a3b4c5d-6e7f-4809-91a2-b3c4d5e6f708">
+            <Label language="EN">Credential Name</Label>
+            <Label language="DE">Credential Name</Label>
+        </GuiLabels>
+    </AttributeMetadata>
+    <AttributeMetadata>
+        <Name>tableId</Name>
+        <Usage>false</Usage>
+        <DataType>xsd:string</DataType>
+        <Default></Default>
+        <Length></Length>
+        <isparameterized>true</isparameterized>
+        <GuiLabels guid="3c4d5e6f-7a8b-4910-a2b3-c4d5e6f70819">
+            <Label language="EN">Table</Label>
+            <Label language="DE">Table</Label>
+        </GuiLabels>
+    </AttributeMetadata>
+    <AttributeMetadata>
+        <Name>incremental</Name>
+        <Usage>false</Usage>
+        <DataType>xsd:boolean</DataType>
+        <Default>true</Default>
+        <Length></Length>
+        <isparameterized>true</isparameterized>
+        <GuiLabels guid="4d5e6f70-8b9c-4a21-b3c4-d5e6f708192a">
+            <Label language="EN">Incremental Load</Label>
+            <Label language="DE">Incremental Load</Label>
+        </GuiLabels>
+    </AttributeMetadata>
+    <AttributeMetadata>
+        <Name>timeoutMs</Name>
+        <Usage>false</Usage>
+        <DataType>xsd:integer</DataType>
+        <Default>60000</Default>
+        <Length></Length>
+        <isparameterized>true</isparameterized>
+        <GuiLabels guid="5e6f7081-9cad-4b32-c4d5-e6f708192a3b">
+            <Label language="EN">Timeout (in ms)</Label>
+            <Label language="DE">Timeout (in ms)</Label>
+        </GuiLabels>
+    </AttributeMetadata>
+</ComponentMetadata>

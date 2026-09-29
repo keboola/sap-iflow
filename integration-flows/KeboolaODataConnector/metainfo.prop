@@ -1,0 +1,2 @@
+#Store metainfo properties
+description=Retrieves business data from SAP S/4HANA and delivers it to Keboola for analytics and further processing.

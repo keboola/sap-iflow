@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><parameters><parameter>
+    <key/>
+    <name>S4_HOSTNAME</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Base address of your SAP S/4HANA system, including the protocol — for example https://my123456-api.s4hana.cloud.sap. Must start with https://; the flow refuses every request against a plain http:// address so that credentials and business data are never sent unencrypted. The one exception is a system behind an SAP Cloud Connector (proxy type sapcc): there, enter the virtual host defined in the Cloud Connector, written with http:// — for example http://s4hana.virtual:44300. Nothing travels unencrypted, the Cloud Connector's tunnel does the encrypting.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CREDENTIAL_ALIAS</name>
+    <type>xsd:string</type>
+    <isRequired>true</isRequired>
+    <constraint/>
+    <description>Name of the security material in this tenant that holds the sign-in details for SAP S/4HANA. Create it under Monitor, Manage Security, Security Material. The material's type must match the authentication method selected on the SAP S/4HANA receiver: OAuth2 Client Credentials for the shipped default, User Credentials when you switch the receiver to Basic. Not used when the receiver is switched to Client Certificate.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>HTTP_TIMEOUT_MS</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How long a single call to SAP S/4HANA may take before it is abandoned, in milliseconds. The flow makes one attempt and answers 504 when this passes, which the calling application then retries; keep the value below that application's own timeout so it receives the 504 rather than a dropped connection. Keboola's SAP OData component waits 60 seconds unless its own timeout setting says otherwise.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_PROXY_TYPE</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>How this tenant reaches your SAP S/4HANA system. Use default when the system is reachable over the internet, or sapcc when it sits behind an SAP Cloud Connector. Where the screen offers a list, these are its entries Internet and On-Premise.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_CC_LOCATION_ID</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Location identifier of the SAP Cloud Connector to use. Leave empty unless you run more than one Cloud Connector against this tenant and set the proxy type to sapcc.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_KEY</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Integration key issued by SAP for this package, sent with every call so SAP can recognise the integration. Leave empty unless the documentation of this package gives you a key.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>AIR_HEADER_NAME</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Name of the request header the integration key is sent in, as stated in the instructions SAP supplies with the key. Nothing is sent unless both this and the key are filled in.</description>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>S4_SAP_CLIENT</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description>Client number of the SAP system to sign in to, for example 100. Needed only on an on-premise or private-edition system with more than one client; leave empty for SAP S/4HANA Cloud and for single-client systems. When set it is sent as sap-client with every call.</description>
+    <additionalMetadata/>
+  </parameter><param_references><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpAddressWithoutQuery" attribute_uilabel="Address" param_key="S4_HOSTNAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_HOSTNAME"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::credentialName" attribute_uilabel="Credential Name" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CREDENTIAL_ALIAS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::httpRequestTimeout" attribute_uilabel="Timeout (in ms)" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="HTTP_TIMEOUT_MS"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::proxyType" attribute_uilabel="Proxy Type" param_key="S4_PROXY_TYPE"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_PROXY_TYPE"/><reference attribute_category="Receiver" attribute_id="ctype::AdapterVariant/cname::HTTP/tp::HTTP/mp::None/direction::Receiver/version::1.17.0/attrId::locationID" attribute_uilabel="Location ID" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_CC_LOCATION_ID"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_KEY"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="AIR_HEADER_NAME"/><reference attribute_category="FlowElement" attribute_id="ctype::FlowstepVariant/cname::Enricher/version::1.6.3/attrId::propertyTable" attribute_uilabel="Exchange Property" param_key="S4_SAP_CLIENT"/></param_references></parameters>
