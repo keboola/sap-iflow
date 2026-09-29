@@ -9,7 +9,7 @@
   <name>${project.groupId}.${project.artifactId}</name>
 
   <properties>
-    <camel.version>3.14.7</camel.version>
+    <camel.version>3.21.4</camel.version>
     <adk.version>2.3.0</adk.version>
     <sap.api.version>3.16.0</sap.api.version>
   </properties>
