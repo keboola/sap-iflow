@@ -20,10 +20,12 @@
       <artifactId>com.sap.cloud.adk.build.archive</artifactId>
       <version>${adk.version}</version>
     </dependency>
+    <!-- Camel comes from the Cloud Integration runtime -->
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
       <version>${camel.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- SAP runtime APIs -->
     <dependency>
