@@ -169,7 +169,7 @@
                 </ifl:property>
                 <ifl:property>
                     <key>allowedRequestHeaders</key>
-                    <value>*</value>
+                    <value>Accept|Accept-Language|Prefer|If-None-Match|If-Modified-Since|{{AIR_HEADER_NAME}}</value>
                 </ifl:property>
                 <ifl:property>
                     <key>direction</key>
