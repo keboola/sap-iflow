@@ -70,10 +70,12 @@ A test file named `*Test.groovy` is picked up without any registration.
 
 | Flow | Script | Tests |
 |---|---|---|
-| Delivery | `odataToCsv` | flatten, `/Date()/` and `PT..S` values, CSV escaping, column order, page identity, repeat detection, paging state |
-| Delivery | `preparePage` | `resolveLink`, `deltaClause`, `withSapClient`, the first-page query, next links, the delta window |
+| Delivery | `odataToCsv` | flatten, `/Date()/` and `PT..S` values, CSV escaping, column order and the 64-character limit, page identity, repeat detection, paging state |
+| Delivery | `preparePage` | `resolveLink`, `deltaClause` with the overlap, `withSapClient`, the first-page query, next links, the delta window |
 | Delivery | `inspectPage` | status classes: ok, wrong host, final failure, retry |
-| Delivery | `startDelivery` | every start check incl. page size, the envelope, the watermark read |
+| Delivery | `startDelivery` | every start check incl. page size (1…20000) and the overlap, the envelope, the watermark read and its failure flags, unsorted paging |
+| Delivery | `startRun` | the envelope becomes properties, the run state, the watermark note and the paging flag on the worker |
+| Delivery | `commitWatermark` | the outcome for the Router (DELIVERED / FAILED), the watermark write and its failure status, the page ceiling, the error body |
 | Connector | `logIncoming` | method, host and path-scope checks (`normalizePath`, `pathAllowed`, `CONNECTOR_PATH_PREFIXES`), masked header summary, monitor fields |
 | Connector | `prepareS4Request` | rejected requests, target path and method, escaped characters, `sap-client`, the integration key header |
 | Connector | `handleException` | error code mapping incl. `PATH_NOT_ALLOWED` and `CONNECTOR_ERROR`, the sign-in fault by text or by the throwing place, message cleaning, monitor fields |

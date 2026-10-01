@@ -16,9 +16,9 @@ import static com.keboola.cpi.tests.Scripts.message
 // startDelivery.groovy: the start checks of a run and the envelope that goes on the queue.
 class StartDeliveryTest {
 
-    // 1.0.0 limits; the delivery track sets the default to 5000 and the ceiling to 20000 (BUILD-BRIEF-v11 §4.3)
-    static final String PAGE_SIZE_DEFAULT = "1000"
-    static final long PAGE_SIZE_CEILING = 100000L
+    // 1.1.0 limits (M7): 5000 a page, 20000 at most
+    static final String PAGE_SIZE_DEFAULT = "5000"
+    static final long PAGE_SIZE_CEILING = 20000L
 
     Script script
     MessageLogFactory logs
@@ -79,6 +79,9 @@ class StartDeliveryTest {
         assert e.deltaPrecision == "day"
         assert e.primaryKey == ""
         assert e.pageSize == PAGE_SIZE_DEFAULT
+        assert e.deltaOverlapMinutes == "15"
+        assert e.watermarkNote == ""
+        assert e.pagingUnsorted == "true"
         assert m.getHeaders()["Content-Type"] == "application/json"
         assert m.getHeaders()["CamelHttpResponseCode"] == 202
         assert m.getProperty("SAP_MessageProcessingLogCustomStatus") == "QUEUED"
@@ -88,6 +91,8 @@ class StartDeliveryTest {
         assert log.customHeaderProperties["LoadMode"] == "full"
         assert log.properties["Watermark"] == "(none — full read)"
         assert log.properties["RunStartedAt"] == e.runStartedAt
+        assert log.customHeaderProperties["WatermarkRead"] == null
+        assert log.customHeaderProperties["PagingUnsorted"] == "true"
     }
 
     @Test
@@ -95,10 +100,12 @@ class StartDeliveryTest {
         def m = start([CFG_LOAD_MODE: "Incremental", CFG_PAGE_SIZE: "250",
             CFG_ODATA_SELECT: " BusinessPartner , LastChangeDate,BusinessPartner", CFG_ODATA_FILTER: "Country eq 'CZ'",
             CFG_DELTA_FIELD: "LastChangeDate", CFG_DELTA_FIELD_TYPE: "DateTimeOffset", CFG_DELTA_PRECISION: "Second",
-            CFG_PRIMARY_KEY: "BusinessPartner", CFG_HTTP_TIMEOUT_MS: "60000"])
+            CFG_PRIMARY_KEY: "BusinessPartner", CFG_HTTP_TIMEOUT_MS: "60000", CFG_DELTA_OVERLAP_MINUTES: "30"])
         def e = envelope(m)
         assert e.loadMode == "incremental"
         assert e.pageSize == "250"
+        assert e.deltaOverlapMinutes == "30"
+        assert e.pagingUnsorted == "false"
         assert e.select == "BusinessPartner,LastChangeDate"
         assert e.filter == "Country eq 'CZ'"
         assert e.deltaField == "LastChangeDate"
@@ -226,6 +233,31 @@ class StartDeliveryTest {
         assert e.deltaPrecision == "hour"
     }
 
+    // 1.1.0 (M6): the overlap is checked with the other incremental settings, ignored on a full load
+    @Test
+    void overlapIsWholeMinutesUpToAWeek() {
+        def incremental = [CFG_LOAD_MODE: "incremental", CFG_DELTA_FIELD: "Changed", CFG_PRIMARY_KEY: "Id"]
+        assert envelope(start(incremental + [CFG_DELTA_OVERLAP_MINUTES: "0"])).deltaOverlapMinutes == "0"
+        assert envelope(start(incremental + [CFG_DELTA_OVERLAP_MINUTES: "10080"])).deltaOverlapMinutes == "10080"
+        assert envelope(start(incremental + [CFG_DELTA_OVERLAP_MINUTES: "{{DELTA_OVERLAP_MINUTES}}"])).deltaOverlapMinutes == "15"
+        ["-1", "10081", "1.5", "ten", "15 min"].each { value ->
+            assert refused(incremental + [CFG_DELTA_OVERLAP_MINUTES: value]) ==
+                "CONFIG: DELTA_OVERLAP_MINUTES must be a whole number of minutes from 0 to 10080; it is '" + value + "'."
+        }
+        assert envelope(start([CFG_DELTA_OVERLAP_MINUTES: "ten"])).deltaOverlapMinutes == "0"
+    }
+
+    // 1.1.0 (M6): a full load without a key pages without $orderby, and says so
+    @Test
+    void fullLoadWithoutAKeyIsMarkedPagingUnsorted() {
+        def m = start([CFG_PRIMARY_KEY: "Id"])
+        assert envelope(m).pagingUnsorted == "false"
+        assert logs.logOf(m).customHeaderProperties["PagingUnsorted"] == null
+        def unsorted = start([CFG_PRIMARY_KEY: ""])
+        assert envelope(unsorted).pagingUnsorted == "true"
+        assert logs.logOf(unsorted).customHeaderProperties["PagingUnsorted"] == "true"
+    }
+
     // Watermark
     @Test
     void watermarkComesFromTheDataStoreWhenThereIsOne() {
@@ -242,13 +274,37 @@ class StartDeliveryTest {
             CFG_KEBOOLA_TABLE_ID: "in.c-sap.other"])).watermark == ""
     }
 
-    // 1.0.0 behaviour: a failed watermark read falls back to a full window without a trace;
-    // the delivery track makes it visible (BUILD-BRIEF-v11 §4.3, M6)
+    // 1.1.0 (M6): a failed watermark read still means a full window, but it is visible
     @Test
-    void unreadableWatermarkMeansAFullWindow() {
+    void unreadableWatermarkMeansAFullWindowAndSaysSo() {
         Factory.register(DataStoreService, [get: { String store, String id -> throw new IllegalStateException("store down") }] as DataStoreService)
         def m = start([CFG_LOAD_MODE: "incremental", CFG_DELTA_FIELD: "Changed", CFG_PRIMARY_KEY: "Id"])
+        def e = envelope(m)
+        assert e.watermark == ""
+        assert e.watermarkNote == "read failed: store down"
+        def log = logs.logOf(m)
+        assert log.properties["Watermark"] == "(none — full read)"
+        assert log.customHeaderProperties["WatermarkRead"] == "failed, full window"
+        assert log.properties["WatermarkReadError"] == "read failed: store down"
+        assert m.getProperty("SAP_MessageProcessingLogCustomStatus") == "QUEUED"
+    }
+
+    @Test
+    void corruptWatermarkEntryIsAFailedRead() {
+        def bean = new DataBean()
+        bean.setDataAsArray("not json".getBytes("UTF-8"))
+        Factory.register(DataStoreService, [get: { String store, String id -> bean }] as DataStoreService)
+        def m = start([CFG_LOAD_MODE: "incremental", CFG_DELTA_FIELD: "Changed", CFG_PRIMARY_KEY: "Id"])
         assert envelope(m).watermark == ""
-        assert logs.logOf(m).properties["Watermark"] == "(none — full read)"
+        assert envelope(m).watermarkNote.startsWith("read failed: ")
+        assert logs.logOf(m).customHeaderProperties["WatermarkRead"] == "failed, full window"
+    }
+
+    @Test
+    void missingDataStoreServiceIsAFailedRead() {
+        def m = start([CFG_LOAD_MODE: "incremental", CFG_DELTA_FIELD: "Changed", CFG_PRIMARY_KEY: "Id"])
+        assert envelope(m).watermarkNote == "read failed: no data store service"
+        assert logs.logOf(m).customHeaderProperties["WatermarkRead"] == "failed, full window"
+        assert envelope(start()).watermarkNote == ""
     }
 }

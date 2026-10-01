@@ -40,26 +40,42 @@ class OdataToCsvTest {
         assert script.csvEscape("") == ""
     }
 
-    // normaliseDate — 1.0.0 behaviour: UTC with a Z suffix, the offset of /Date(ms+0100)/ ignored
+    // normaliseDate — 1.1.0: no time zone suffix, SAP's value carries none; the offset of /Date(ms+0100)/ ignored
     @Test
-    void edmDateTimeBecomesIsoUtcWithZ() {
-        assert script.normaliseDate("/Date(1696032000000)/") == "2023-09-30T00:00:00Z"
-        assert script.normaliseDate("/Date(1696032000000+0100)/") == "2023-09-30T00:00:00Z"
-        assert script.normaliseDate("/Date(-86400000)/") == "1969-12-31T00:00:00Z"
+    void edmDateTimeBecomesIsoWithoutZone() {
+        assert script.normaliseDate("/Date(1696032000000)/") == "2023-09-30T00:00:00"
+        assert script.normaliseDate("/Date(1696032000000+0100)/") == "2023-09-30T00:00:00"
+        assert script.normaliseDate("/Date(-86400000)/") == "1969-12-31T00:00:00"
+        assert script.normaliseDate("/Date(1696032045123)/") == "2023-09-30T00:00:45"
         assert script.normaliseDate("/Date(1696032000000)") == "/Date(1696032000000)"
         assert script.normaliseDate("2023-09-30T00:00:00") == "2023-09-30T00:00:00"
         assert script.normaliseDate("/Date(abc)/") == "/Date(abc)/"
     }
 
-    // normaliseTime — 1.0.0 behaviour: whole seconds only, fractions pass through unchanged
+    // normaliseTime — 1.1.0: fractional seconds kept, missing parts count as zero
     @Test
     void edmTimeBecomesClockTime() {
         assert script.normaliseTime("PT10H20M30S") == "10:20:30"
         assert script.normaliseTime("PT1H2M3S") == "01:02:03"
         assert script.normaliseTime("PT0H0M0S") == "00:00:00"
-        assert script.normaliseTime("PT1H2M3.5S") == "PT1H2M3.5S"
-        assert script.normaliseTime("PT10H") == "PT10H"
+        assert script.normaliseTime("PT1H2M3.5S") == "01:02:03.5"
+        assert script.normaliseTime("PT23H59M59.9999999S") == "23:59:59.9999999"
+        assert script.normaliseTime("PT10H") == "10:00:00"
+        assert script.normaliseTime("PT45M") == "00:45:00"
+        assert script.normaliseTime("PT7.25S") == "00:00:07.25"
+        assert script.normaliseTime("PT") == "PT"
+        assert script.normaliseTime("P1D") == "P1D"
         assert script.normaliseTime("10:20:30") == "10:20:30"
+    }
+
+    // longColumnOf — Keboola's 64-character limit on a column name
+    @Test
+    void columnNamesOverSixtyFourCharactersAreFound() {
+        def ok = "A" * 64
+        def long1 = "B" * 65
+        assert script.longColumnOf(["Id", ok]) == null
+        assert script.longColumnOf(["Id", long1, "C" * 70]) == long1
+        assert script.longColumnOf([]) == null
     }
 
     // render
@@ -70,8 +86,9 @@ class OdataToCsvTest {
         assert script.render(new BigDecimal("12.50")) == "12.50"
         assert script.render(42) == "42"
         assert script.render(true) == "true"
-        assert script.render("/Date(1696032000000)/") == "2023-09-30T00:00:00Z"
+        assert script.render("/Date(1696032000000)/") == "2023-09-30T00:00:00"
         assert script.render("PT1H2M3S") == "01:02:03"
+        assert script.render("PT1H2M3.25S") == "01:02:03.25"
     }
 
     // flatten
@@ -189,6 +206,28 @@ class OdataToCsvTest {
             assert m.getProperty("RUN_FAILED_DETAIL").contains("without a body")
             assert m.getBody() == ""
         }
+    }
+
+    // 1.1.0: a flattened name over 64 characters ends the run as KEBOOLA_FAILED before any import
+    @Test
+    void columnOverSixtyFourCharactersEndsTheRunBeforeAnyImport() {
+        def name = "Address_" + ("X" * 60)
+        def m = page([DLV_pageSize: "2"], '{"d":{"results":[{"Id":"1","Address":{"' + ("X" * 60) + '":"v"}}]}}')
+        script.processData(m)
+        assert m.getProperty("RUN_FAILED") == "KEBOOLA_FAILED"
+        assert m.getProperty("RUN_FAILED_DETAIL") == "Column '" + name + "' is 68 characters long; Keboola allows 64. " +
+            "Nothing was imported. Leave the field out with ODATA_SELECT, or read a service whose field names are shorter."
+        assert m.getProperty("ROWS_IN_PAGE") == "0"
+        assert m.getProperty("MORE_PAGES") == "false"
+        assert m.getBody() == ""
+        def selected = page([DLV_select: "Id," + ("Y" * 65)], '{"d":{"results":[{"Id":"1"}]}}')
+        script.processData(selected)
+        assert selected.getProperty("RUN_FAILED") == "KEBOOLA_FAILED"
+        assert selected.getProperty("RUN_FAILED_DETAIL").startsWith("Column '" + ("Y" * 65) + "' is 65 characters long")
+        def fine = page([DLV_select: "Id," + ("Z" * 64)], '{"d":{"results":[{"Id":"1"}]}}')
+        script.processData(fine)
+        assert fine.getProperty("RUN_FAILED") == null
+        assert fine.getProperty("ROWS_IN_PAGE") == "1"
     }
 
     // Column order

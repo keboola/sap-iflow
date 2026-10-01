@@ -68,6 +68,7 @@ class PreparePageTest {
         assert script.lowerBound("2026-09-30T10:11:12", "day") == "2026-09-29T00:00:00"
         assert script.lowerBound("2026-03-01T00:00:00", "day") == "2026-02-28T00:00:00"
         assert script.lowerBound("2026-09-30T10:11:12", "second") == "2026-09-30T10:11:12"
+        assert script.lowerBound("2026-09-30T10:11:12", "day", 15L) == "2026-09-29T00:00:00"
         assert script.lowerBound("", "day") == ""
     }
 
@@ -79,6 +80,27 @@ class PreparePageTest {
         assert script.literal("2026-09-30T10:11:12", "datetime", true) == "2026-09-30T10:11:12Z"
         assert script.literal("2026-09-30T10:11:12", "datetimeoffset", true) == "2026-09-30T10:11:12Z"
         assert script.literal("2026-09-30T10:11:12", "date", true) == "2026-09-30"
+    }
+
+    // 1.1.0 (M6): at second precision the window starts DELTA_OVERLAP_MINUTES before the watermark
+    @Test
+    void lowerBoundOverlapsAtSecondPrecision() {
+        assert script.lowerBound("2026-09-30T10:11:12", "second", 15L) == "2026-09-30T09:56:12"
+        assert script.lowerBound("2026-10-01T00:10:00", "second", 15L) == "2026-09-30T23:55:00"
+        assert script.lowerBound("2026-09-30T10:11:12", "second", 0L) == "2026-09-30T10:11:12"
+        assert script.lowerBound("2026-09-30T10:11:12", "second", 10080L) == "2026-09-23T10:11:12"
+        assert script.lowerBound("2026-09-30", "second", 15L) == "2026-09-30"
+        assert script.lowerBound("not a time here", "second", 15L) == "not a time here"
+    }
+
+    @Test
+    void deltaClauseAppliesTheOverlapAtSecondPrecisionOnly() {
+        assert script.deltaClause("Changed", "2026-09-01T10:00:00", "2026-09-30T02:00:00", "datetimeoffset", "second", false, 15L) ==
+            "Changed ge datetimeoffset'2026-09-01T09:45:00Z' and Changed le datetimeoffset'2026-09-30T02:00:00Z'"
+        assert script.deltaClause("Changed", "2026-09-01T10:00:00", "2026-09-30T02:00:00", "datetime", "day", false, 15L) ==
+            "Changed ge datetime'2026-08-31T00:00:00' and Changed le datetime'2026-09-30T00:00:00'"
+        assert script.deltaClause("Changed", "", "2026-09-30T02:00:00", "datetimeoffset", "second", false, 15L) ==
+            "Changed le datetimeoffset'2026-09-30T02:00:00Z'"
     }
 
     // deltaClause
@@ -247,6 +269,28 @@ class PreparePageTest {
         script.processData(m)
         assert logs.logOf(m).customHeaderProperties["DeltaWindow"] ==
             "LastChangeDateTime ge 2026-09-01T10:00:00Z and LastChangeDateTime le 2026-09-30T02:00:00Z"
+    }
+
+    @Test
+    void incrementalAtSecondPrecisionOverlapsAndLogsIt() {
+        def m = message(properties: firstPage() + [DLV_filter: "", DLV_loadMode: "incremental", DLV_deltaField: "LastChangeDateTime",
+            DLV_watermark: "2026-09-01T10:00:00", DLV_runStartedAt: "2026-09-30T02:00:00",
+            DLV_deltaFieldType: "datetimeoffset", DLV_deltaPrecision: "second", DLV_deltaOverlapMinutes: "15"])
+        script.processData(m)
+        def window = "LastChangeDateTime ge datetimeoffset'2026-09-01T09:45:00Z' and LastChangeDateTime le datetimeoffset'2026-09-30T02:00:00Z'"
+        assert logs.logOf(m).customHeaderProperties["DeltaWindow"] == window
+        assert logs.logOf(m).customHeaderProperties["DeltaOverlap"] == "15 min before 2026-09-01T10:00:00"
+        assert decodedFilter(m.getProperty("S4_QUERY_STRING")) == "(" + window + ")"
+        def daily = message(properties: firstPage() + [DLV_loadMode: "incremental", DLV_deltaField: "LastChangeDate",
+            DLV_watermark: "2026-09-01T10:00:00", DLV_runStartedAt: "2026-09-30T02:00:00", DLV_deltaOverlapMinutes: "15"])
+        script.processData(daily)
+        assert logs.logOf(daily).customHeaderProperties["DeltaOverlap"] == null
+        def first = message(properties: firstPage() + [DLV_loadMode: "incremental", DLV_deltaField: "LastChangeDateTime",
+            DLV_watermark: "", DLV_runStartedAt: "2026-09-30T02:00:00", DLV_deltaFieldType: "datetimeoffset",
+            DLV_deltaPrecision: "second", DLV_deltaOverlapMinutes: "15"])
+        script.processData(first)
+        assert logs.logOf(first).customHeaderProperties["DeltaOverlap"] == null
+        assert logs.logOf(first).customHeaderProperties["DeltaWindow"] == "LastChangeDateTime le datetimeoffset'2026-09-30T02:00:00Z'"
     }
 
     @Test
