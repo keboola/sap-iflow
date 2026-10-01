@@ -121,7 +121,7 @@ A list read from the communication arrangements is the same in all three. A supp
 - lookup+verify: the address comes from the value mapping KeboolaServiceAddresses of this package; a service the mapping does not know is tried at up to four addresses built from its name, one small request each to the service's own document, and listed at the first one that answers.
 - lookup: the value mapping only; a service it does not know is left out.
 - off: no OData V4 service of an arrangement is listed.
-Services left out are counted in the response header X-Keboola-Catalog-Unlisted and named in the run's log property CatalogUnlisted; add them to the value mapping.</description>
+Services left out are counted in the response header X-Keboola-Catalog-Unlisted and named in the run's log property CatalogUnlistedNames; add them to the value mapping.</description>
     <additionalMetadata/>
   </parameter><parameter>
     <key/>
