@@ -23,6 +23,32 @@ static String readCfg(Message message, String key) {
     return v
 }
 
+// The request path with "." and ".." segments resolved, always with one leading slash, so
+// that a prefix check cannot be walked around with /sap/opu/odata/../../bc/...
+static String normalizePath(String path) {
+    def segments = []
+    for (String segment : (path ?: "").split("/")) {
+        if (!segment || segment == ".") { continue }
+        if (segment == "..") {
+            if (segments) { segments.remove(segments.size() - 1) }
+            continue
+        }
+        segments << segment
+    }
+    return "/" + segments.join("/")
+}
+
+// CONNECTOR_PATH_PREFIXES: comma separated prefixes; empty means every path is forwarded.
+static boolean pathAllowed(String path, String prefixes) {
+    def wanted = prefixes?.split(",")?.collect { it.trim() }?.findAll { it } ?: []
+    if (!wanted) { return true }
+    def normalized = normalizePath(path)
+    return wanted.any { prefix ->
+        def p = prefix.startsWith("/") ? prefix : "/" + prefix
+        (normalized + "/").startsWith(p) || normalized.startsWith(p)
+    }
+}
+
 def Message processData(Message message) {
     final SENSITIVE_FRAGMENTS = [
         'authorization', 'cookie', 'token', 'secret',
@@ -60,6 +86,15 @@ def Message processData(Message message) {
                 "S4_HOSTNAME must start with https:// — business data and credentials are " +
                 "never sent over an unencrypted connection. Configured value starts with '" +
                 host.substring(0, Math.min(host.length(), 8)) + "'.")
+        }
+    }
+
+    // Path scope
+    if (!message.getProperty("KEBOOLA_REJECT_REASON")) {
+        def requestPath = headers.get("CamelHttpPath")?.toString() ?: ""
+        if (!pathAllowed(requestPath, readCfg(message, "CFG_PATH_PREFIXES"))) {
+            message.setProperty("KEBOOLA_REJECT_REASON", "PATH_NOT_ALLOWED")
+            message.setProperty("KEBOOLA_REJECT_DETAIL", normalizePath(requestPath))
         }
     }
 

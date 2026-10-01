@@ -55,6 +55,13 @@ def Message processData(Message message) {
         code = "CONFIG_ERROR"
         def detail = message.getProperty("KEBOOLA_REJECT_DETAIL")?.toString()
         if (detail) { errorMessage = detail }
+    } else if (rejectReason == "PATH_NOT_ALLOWED") {
+        status = 403
+        code = "PATH_NOT_ALLOWED"
+        def detail = message.getProperty("KEBOOLA_REJECT_DETAIL")?.toString() ?: "the requested path"
+        errorMessage = "The path " + detail + " is outside the paths this connector forwards to SAP S/4HANA. " +
+            "CONNECTOR_PATH_PREFIXES allows " + (readCfg(message, "CFG_PATH_PREFIXES") ?: "(nothing)") +
+            "; add a prefix there, or leave it empty to forward every path."
     } else if (signInNotPrepared(errorClass, errorMessage)) {
         status = 500
         code = "CONFIG_ERROR"
