@@ -111,6 +111,9 @@ def Message processData(Message message) {
     def deltaFields = namesOf(deltaFieldText)
     def deltaFieldType = cfg(message, "CFG_DELTA_FIELD_TYPE", "datetime").toLowerCase()
     def deltaPrecision = cfg(message, "CFG_DELTA_PRECISION", "day").toLowerCase()
+    def overlapText = cfg(message, "CFG_DELTA_OVERLAP_MINUTES", "15")
+    long overlapMinutes = -1L
+    if (overlapText ==~ '[0-9]{1,5}') { overlapMinutes = Long.parseLong(overlapText) }
     def primaryKey = cfg(message, "CFG_PRIMARY_KEY", "")
     def selected = namesOf(cfg(message, "CFG_ODATA_SELECT", ""))
     if (selected.contains("*")) { selected = [] }
@@ -130,7 +133,13 @@ def Message processData(Message message) {
                 "by commas; it is '" + deltaFieldText + "'.")
         }
         if (!keyColumns) { throw new IllegalStateException("CONFIG: incremental loading needs PRIMARY_KEY, so that records read again are updated rather than added twice.") }
+        if (overlapMinutes < 0L || overlapMinutes > 10080L) {
+            throw new IllegalStateException("CONFIG: DELTA_OVERLAP_MINUTES must be a whole number of minutes " +
+                "from 0 to 10080; it is '" + overlapText + "'.")
+        }
     }
+    // Unsorted paging
+    boolean pagingUnsorted = loadMode == "full" && !keyColumns
 
     // Run start
     def runStartedAt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
@@ -138,10 +147,13 @@ def Message processData(Message message) {
 
     // Watermark
     String watermark = ""
+    String watermarkNote = ""
     if (loadMode == "incremental") {
         try {
             def dataStore = new Factory(DataStoreService.class).getService()
-            if (dataStore != null) {
+            if (dataStore == null) {
+                watermarkNote = "read failed: no data store service"
+            } else {
                 def bean = dataStore.get("KeboolaDeliveryState", tableId)
                 if (bean != null) {
                     def state = new JsonSlurper().parse(
@@ -149,8 +161,10 @@ def Message processData(Message message) {
                     watermark = state["watermark"]?.toString() ?: ""
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             watermark = ""
+            watermarkNote = "read failed: " + (e.getMessage() ?: e.getClass().getSimpleName())
+                .replaceAll('[\\s\\p{Cc}]+', " ").trim().take(200)
         }
     }
 
@@ -160,6 +174,7 @@ def Message processData(Message message) {
         runStartedAt:  runStartedAt,
         loadMode:      loadMode,
         watermark:     watermark,
+        watermarkNote: watermarkNote,
         tableId:       tableId,
         servicePath:   servicePath,
         entitySet:     entitySet,
@@ -168,8 +183,10 @@ def Message processData(Message message) {
         deltaField:    deltaFields.join(","),
         deltaFieldType: deltaFieldType,
         deltaPrecision: deltaPrecision,
+        deltaOverlapMinutes: Long.toString(Math.max(0L, overlapMinutes)),
         primaryKey:    keyColumns.join(","),
         pageSize:      Long.toString(pageSize),
+        pagingUnsorted: pagingUnsorted ? "true" : "false",
     ]
 
     message.setProperty("KEBOOLA_MESSAGE_ID", messageId)
@@ -185,6 +202,11 @@ def Message processData(Message message) {
         messageLog.addCustomHeaderProperty("LoadMode", loadMode)
         messageLog.setStringProperty("Watermark", watermark ?: "(none — full read)")
         messageLog.setStringProperty("RunStartedAt", runStartedAt)
+        if (watermarkNote) {
+            messageLog.addCustomHeaderProperty("WatermarkRead", "failed, full window")
+            messageLog.setStringProperty("WatermarkReadError", watermarkNote)
+        }
+        if (pagingUnsorted) { messageLog.addCustomHeaderProperty("PagingUnsorted", "true") }
     }
     return message
 }

@@ -7,9 +7,9 @@ def Message processData(Message message) {
     try { envelope = new JsonSlurper().parse(message.getBody(java.io.Reader)) }
     catch (Exception ignored) { envelope = [:] }
     if (!(envelope instanceof Map)) { envelope = [:] }
-    ["messageId", "runStartedAt", "loadMode", "watermark", "tableId", "servicePath",
+    ["messageId", "runStartedAt", "loadMode", "watermark", "watermarkNote", "tableId", "servicePath",
      "entitySet", "select", "filter", "deltaField", "deltaFieldType", "deltaPrecision",
-     "primaryKey", "pageSize"].each { key ->
+     "deltaOverlapMinutes", "primaryKey", "pageSize", "pagingUnsorted"].each { key ->
         message.setProperty("DLV_" + key, envelope[key]?.toString() ?: "")
     }
     def messageId = envelope["messageId"]?.toString() ?: "unknown"
@@ -25,6 +25,12 @@ def Message processData(Message message) {
     message.setProperty("RUN_FAILED_DETAIL", "")
     message.setProperty("PAGE_VERDICT", "ok")
 
+    // Watermark note
+    def watermarkNote = envelope["watermarkNote"]?.toString() ?: ""
+    if (watermarkNote) {
+        message.setProperty("DELIVERY_NOTES", "watermark " + watermarkNote + "; the full window was read")
+    }
+
     def messageLog = messageLogFactory.getMessageLog(message)
     if (messageLog != null) {
         messageLog.addCustomHeaderProperty("KeboolaMessageId", messageId)
@@ -32,6 +38,10 @@ def Message processData(Message message) {
         messageLog.addCustomHeaderProperty("LoadMode", envelope["loadMode"]?.toString() ?: "")
         messageLog.setStringProperty("Watermark", envelope["watermark"]?.toString() ?: "(none — full read)")
         messageLog.setStringProperty("RunStartedAt", envelope["runStartedAt"]?.toString() ?: "")
+        if (watermarkNote) { messageLog.addCustomHeaderProperty("WatermarkRead", "failed, full window") }
+        if (envelope["pagingUnsorted"]?.toString() == "true") {
+            messageLog.addCustomHeaderProperty("PagingUnsorted", "true")
+        }
     }
     return message
 }

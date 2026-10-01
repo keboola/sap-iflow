@@ -71,6 +71,7 @@ def Message processData(Message message) {
 
     // Watermark
     String committed = "not applicable (full load)"
+    String writeError = ""
     if (loadMode == "incremental" && tableId && runStartedAt) {
         try {
             def dataStore = new Factory(DataStoreService.class).getService()
@@ -87,16 +88,18 @@ def Message processData(Message message) {
                 dataStore.put(bean, config)
                 committed = runStartedAt
             } else {
-                committed = "failed: no data store service"
+                writeError = "no data store service"
             }
         } catch (Exception e) {
-            committed = "failed: " + (e.getMessage() ?: e.getClass().getSimpleName())
+            writeError = e.getMessage() ?: e.getClass().getSimpleName()
         }
+        if (writeError) { committed = "write failed: " + writeError }
     }
 
     // Delivery summary
+    def status = writeError ? "DELIVERED_WATERMARK_FAILED" : "DELIVERED"
     message.setProperty("RUN_OUTCOME", "DELIVERED")
-    message.setProperty("SAP_MessageProcessingLogCustomStatus", "DELIVERED")
+    message.setProperty("SAP_MessageProcessingLogCustomStatus", status)
     message.setBody(JsonOutput.toJson([
         messageId: messageId, tableId: tableId, pages: pages,
         rowsDelivered: rows, loadMode: loadMode, watermark: committed,
@@ -105,11 +108,17 @@ def Message processData(Message message) {
 
     if (messageLog != null) {
         messageLog.addCustomHeaderProperty("KeboolaMessageId", messageId)
-        messageLog.addCustomHeaderProperty("DeliveryOutcome", "DELIVERED")
+        messageLog.addCustomHeaderProperty("DeliveryOutcome", status)
         messageLog.addCustomHeaderProperty("Pages", pages)
         messageLog.addCustomHeaderProperty("RowsDelivered", rows)
         messageLog.addCustomHeaderProperty("TableId", tableId)
         messageLog.addCustomHeaderProperty("Watermark", committed)
+        if (writeError) {
+            messageLog.addAttachmentAsString("WatermarkError", "The rows were delivered, but the watermark " +
+                runStartedAt + " could not be saved for table " + tableId + ": " + writeError + ". The next " +
+                "incremental run reads from the previous watermark again; records read twice are updated " +
+                "by primary key.", "text/plain")
+        }
         if (notes) { messageLog.setStringProperty("DeliveryNotes", notes) }
     }
     return message
