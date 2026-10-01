@@ -74,5 +74,7 @@ A test file named `*Test.groovy` is picked up without any registration.
 | Delivery | `preparePage` | `resolveLink`, `deltaClause`, `withSapClient`, the first-page query, next links, the delta window |
 | Delivery | `inspectPage` | status classes: ok, wrong host, final failure, retry |
 | Delivery | `startDelivery` | every start check incl. page size, the envelope, the watermark read |
-| Connector | `handleException` | error code mapping, message cleaning, monitor fields |
+| Connector | `logIncoming` | method, host and path-scope checks (`normalizePath`, `pathAllowed`, `CONNECTOR_PATH_PREFIXES`), masked header summary, monitor fields |
+| Connector | `prepareS4Request` | rejected requests, target path and method, escaped characters, `sap-client`, the integration key header |
+| Connector | `handleException` | error code mapping incl. `PATH_NOT_ALLOWED` and `CONNECTOR_ERROR`, the sign-in fault by text or by the throwing place, message cleaning, monitor fields |
 | Catalogue | — | `catalogue/CatalogueScriptsTest.groovy` holds the place for the 1.1.0 build script |
