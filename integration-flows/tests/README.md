@@ -77,4 +77,9 @@ A test file named `*Test.groovy` is picked up without any registration.
 | Connector | `logIncoming` | method, host and path-scope checks (`normalizePath`, `pathAllowed`, `CONNECTOR_PATH_PREFIXES`), masked header summary, monitor fields |
 | Connector | `prepareS4Request` | rejected requests, target path and method, escaped characters, `sap-client`, the integration key header |
 | Connector | `handleException` | error code mapping incl. `PATH_NOT_ALLOWED` and `CONNECTOR_ERROR`, the sign-in fault by text or by the throwing place, message cleaning, monitor fields |
-| Catalogue | — | `catalogue/CatalogueScriptsTest.groovy` holds the place for the 1.1.0 build script |
+| Catalogue | `planCatalogRead` | every start check, the address options, the diagnostics gate, the plan |
+| Catalogue | `nextArrangementPage`, `recordArrangementPage` | the arrangement API's pages, next links pinned to the host, the three entity sets, the outcomes |
+| Catalogue | `buildCatalog` | the V2 address rule, the Value Mapping lookups, the four naming rules, the user filter, the resolve modes, Gateway rows, the wrong-host guard and the other refusals |
+| Catalogue | `nextCandidate`, `recordCandidate` | one service-document call per candidate, the first 200 lists the service, the limits |
+| Catalogue | `answerCatalog` | the views, the sort order, verified guesses, unlisted names, response headers, diagnostics gate, monitor fields |
+| Catalogue | `handleCatalogException` | the build script's `CONFIG:`/`UPSTREAM:` prefixes, unreachable host and timeout told apart, 405 with `Allow`, the sign-in fault by text or by the throwing place, `CATALOG_ERROR` with `ErrorLocation`, monitor fields |
