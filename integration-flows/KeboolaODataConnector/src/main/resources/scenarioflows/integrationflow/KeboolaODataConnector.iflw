@@ -313,7 +313,7 @@
                 </ifl:property>
                 <ifl:property>
                     <key>userRole</key>
-                    <value>ESBMessaging.send</value>
+                    <value>{{SENDER_ROLE}}</value>
                 </ifl:property>
                 <ifl:property>
                     <key>senderAuthType</key>
