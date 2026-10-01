@@ -41,6 +41,7 @@ def Message processData(Message message) {
     if (runFailed) {
         def detail = message.getProperty("RUN_FAILED_DETAIL")?.toString() ?: "no detail recorded"
         long pagesDelivered = stoppedAtCeiling ? count(pages) : Math.max(0L, count(pages) - 1L)
+        message.setProperty("RUN_OUTCOME", "FAILED")
         message.setProperty("SAP_MessageProcessingLogCustomStatus", runFailed)
         def timestamp = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
                 .format(java.time.Instant.now().atZone(java.time.ZoneId.systemDefault()))
@@ -94,6 +95,7 @@ def Message processData(Message message) {
     }
 
     // Delivery summary
+    message.setProperty("RUN_OUTCOME", "DELIVERED")
     message.setProperty("SAP_MessageProcessingLogCustomStatus", "DELIVERED")
     message.setBody(JsonOutput.toJson([
         messageId: messageId, tableId: tableId, pages: pages,
