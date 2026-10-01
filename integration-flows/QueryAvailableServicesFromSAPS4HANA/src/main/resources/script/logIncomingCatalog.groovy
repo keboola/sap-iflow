@@ -37,13 +37,8 @@ def Message processData(Message message) {
         message.setProperty("KEBOOLA_REJECT_DETAIL", httpMethod)
     }
 
-    // Catalogue route
-    def proxyType = message.getProperty("CFG_PROXY_TYPE")?.toString()?.trim()?.toLowerCase() ?: ""
-    if (proxyType.contains("{{")) { proxyType = "" }
-    def query = headers.get("CamelHttpQuery")?.toString() ?: ""
-    message.setProperty("CATALOG_QUERY", query)
-    boolean forcedTunnel = query.split("&").any { it == "mode=gateway-cc" }
-    message.setProperty("CATALOG_ROUTE", (proxyType == "sapcc" || forcedTunnel) ? "adapter" : "script")
+    // Address options, kept aside before the receiver calls clear the header
+    message.setProperty("CATALOG_QUERY", headers.get("CamelHttpQuery")?.toString() ?: "")
 
     // Incoming headers
     def summary = headers
@@ -68,7 +63,6 @@ def Message processData(Message message) {
     messageLog.setStringProperty("HttpMethod", httpMethod)
     messageLog.setStringProperty("QueryString",
         redactQuery(headers.get("CamelHttpQuery")?.toString(), SENSITIVE_FRAGMENTS) ?: "N/A")
-    messageLog.setStringProperty("CatalogRoute", message.getProperty("CATALOG_ROUTE")?.toString())
 
     return message
 }

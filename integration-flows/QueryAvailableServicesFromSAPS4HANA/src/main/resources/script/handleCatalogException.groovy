@@ -10,10 +10,21 @@ static String jsonEscape(String s) {
             .replaceAll('[\\x00-\\x1F]', ' ')
 }
 
-static boolean signInNotPrepared(String errorClass, String errorMessage) {
+// The platform's own NullPointerException is a sign-in fault only when it was thrown while
+// the sign-in was prepared (a security material of another type than the method needs);
+// the place is the class that threw it. Any other NullPointerException is the catalogue's.
+static boolean signInLocation(String errorLocation) {
+    def where = (errorLocation ?: "").toLowerCase()
+    return ["auth", "credential", "securestore", "security", "oauth"].any { where.contains(it) }
+}
+
+static boolean signInNotPrepared(String errorClass, String errorMessage, String errorLocation) {
+    // The platform's own words for a security material that does not exist: the first two
+    // under OAuth2 Client Credentials, the third under Basic (measured 2026-09-30).
     if (errorMessage.contains("No artifact descriptor found")) { return true }
     if (errorMessage.contains("Could not find credential")) { return true }
-    return errorClass == "java.lang.NullPointerException"
+    if (errorMessage.contains("No credentials for")) { return true }
+    return errorClass == "java.lang.NullPointerException" && signInLocation(errorLocation)
 }
 
 def Message processData(Message message) {
@@ -27,9 +38,14 @@ def Message processData(Message message) {
     // Error message
     def errorMessage = "Unknown error"
     def errorClass = "Unknown"
+    def errorLocation = ""
     if (ex != null) {
         errorMessage = ex.getMessage() ?: "No message"
         errorClass = ex.getClass().getName()
+        def frames = ex instanceof Throwable ? ex.getStackTrace() : null
+        if (frames && frames.length > 0) {
+            errorLocation = frames[0].getClassName() + "." + frames[0].getMethodName()
+        }
     }
     errorMessage = errorMessage.replaceAll(/^(?:[A-Za-z0-9_.]+Exception:\s*)+/, "")
                                .replaceAll(/(?s)@ line \d+ in .*$/, "").trim()
@@ -53,14 +69,19 @@ def Message processData(Message message) {
         status = 502
         code = "UPSTREAM_ERROR"
         errorMessage = errorMessage.replaceFirst(/UPSTREAM:\s*/, "")
-    } else if (signInNotPrepared(errorClass, errorMessage)) {
+    } else if (signInNotPrepared(errorClass, errorMessage, errorLocation)) {
         status = 500
         code = "CONFIG_ERROR"
         errorMessage = "The sign-in to SAP S/4HANA could not be prepared. " +
             "Check the security material named in S4_CREDENTIAL_ALIAS: it has to exist in this tenant " +
-            "and be of the type the authentication method of the receivers HTTP_V2 and HTTP_V4 needs, " +
-            "OAuth2 Client Credentials as shipped, User Credentials for Basic. The platform reported: " +
+            "and be of the type S4_AUTH_METHOD needs, OAuth2 Client Credentials as shipped, " +
+            "User Credentials for Basic. The platform reported: " +
             errorMessage
+    } else if (errorClass == "java.lang.NullPointerException") {
+        status = 500
+        code = "CATALOG_ERROR"
+        errorMessage = "The catalogue failed inside the platform at " + (errorLocation ?: "an unknown place") +
+            ". The platform reported: " + errorMessage
     } else if (errorClass.toLowerCase().contains("timeout") || errorMessage.toLowerCase().contains("timed out")) {
         status = 504
         code = "UPSTREAM_TIMEOUT"
@@ -86,10 +107,24 @@ def Message processData(Message message) {
         messageLog.addCustomHeaderProperty("CatalogSource", "error")
         messageLog.addCustomHeaderProperty("UpstreamOutcome", "FAILED")
         messageLog.addCustomHeaderProperty("UpstreamStatus", status.toString())
+        if (errorLocation) {
+            messageLog.setStringProperty("ErrorLocation", errorLocation)
+            // Where the platform failed, searchable, for the two codes that mean it did
+            if (code == "CATALOG_ERROR" || (code == "CONFIG_ERROR" && !rejectReason
+                    && errorMessage.startsWith("The sign-in to SAP S/4HANA could not be prepared"))) {
+                messageLog.addCustomHeaderProperty("ErrorLocation", errorLocation.take(200))
+            }
+        }
         messageLog.addAttachmentAsString("ErrorDetails", errorMessage, "text/plain")
         def incoming = message.getProperty("KEBOOLA_INCOMING_HEADERS")?.toString()
         if (incoming) {
             messageLog.addAttachmentAsString("IncomingHeaders", incoming, "text/plain")
+        }
+        def notes = message.getProperty("CATALOG_NOTES")
+        if (notes instanceof List && notes) {
+            String joined = notes.join(" | ")
+            messageLog.setStringProperty("CatalogDiagnostics",
+                joined.length() > 2000 ? joined.substring(0, 2000) + " ..." : joined)
         }
     }
 
