@@ -88,11 +88,11 @@ def Message processData(Message message) {
     String servicePath = servicePathOf(cfg(message, "CFG_SERVICE_PATH", ""))
     String entitySet = entitySetOf(cfg(message, "CFG_ENTITY_SET", ""))
     requireOneOf(loadMode, "LOAD_MODE", ["full", "incremental"])
-    def pageSizeText = cfg(message, "CFG_PAGE_SIZE", "1000")
+    def pageSizeText = cfg(message, "CFG_PAGE_SIZE", "5000")
     long pageSize = -1L
     try { pageSize = Long.parseLong(pageSizeText) } catch (Exception ignored) { }
-    if (pageSize < 1L || pageSize > 100000L) {
-        throw new IllegalStateException("CONFIG: PAGE_SIZE must be a whole number from 1 to 100000; it is '" + pageSizeText + "'.")
+    if (pageSize < 1L || pageSize > 20000L) {
+        throw new IllegalStateException("CONFIG: PAGE_SIZE must be a whole number from 1 to 20000; it is '" + pageSizeText + "'.")
     }
     def timeoutText = cfg(message, "CFG_HTTP_TIMEOUT_MS", "")
     if (timeoutText) {

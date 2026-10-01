@@ -158,7 +158,7 @@
     <type>xsd:string</type>
     <isRequired>false</isRequired>
     <constraint/>
-    <description>How many records to read per request, 1 to 100000. When the service pages its answer itself it sends a link to the next page, and the flow follows that link instead — so a page smaller than asked for, followed by a link, is normal.</description>
+    <description>How many records to read per request, 1 to 20000. A run that asks for more is refused before anything is read. When the service pages its answer itself it sends a link to the next page, and the flow follows that link instead — so a page smaller than asked for, followed by a link, is normal. Every page is held in memory as text, as parsed records and as the rows sent to Keboola, so a large page on a wide record needs room on the worker; the integration guide gives measured sizes.</description>
     <additionalMetadata/>
   </parameter><parameter>
     <key/>
