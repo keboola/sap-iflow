@@ -109,7 +109,7 @@
                 </ifl:property>
                 <ifl:property>
                     <key>privateKeyAlias</key>
-                    <value />
+                    <value>{{S4_PRIVATE_KEY_ALIAS}}</value>
                 </ifl:property>
                 <ifl:property>
                     <key>httpMethod</key>
@@ -217,7 +217,7 @@
                 </ifl:property>
                 <ifl:property>
                     <key>authenticationMethod</key>
-                    <value>OAuth2 Client Credentials</value>
+                    <value>{{S4_AUTH_METHOD}}</value>
                 </ifl:property>
                 <ifl:property>
                     <key>locationID</key>

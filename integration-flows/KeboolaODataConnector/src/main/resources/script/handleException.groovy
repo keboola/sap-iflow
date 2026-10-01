@@ -60,8 +60,8 @@ def Message processData(Message message) {
         code = "CONFIG_ERROR"
         errorMessage = "The sign-in to SAP S/4HANA could not be prepared. " +
             "Check the security material named in S4_CREDENTIAL_ALIAS: it has to exist in this tenant " +
-            "and be of the type the authentication method of the SAP S/4HANA receiver needs, OAuth2 " +
-            "Client Credentials as shipped, User Credentials for Basic. The platform reported: " + errorMessage
+            "and be of the type S4_AUTH_METHOD needs, OAuth2 Client Credentials as shipped, " +
+            "User Credentials for Basic. The platform reported: " + errorMessage
     } else if (errorClass.toLowerCase().contains("timeout") || errorMessage.toLowerCase().contains("timed out")
                || errorMessage.toLowerCase().contains("timeout")) {
         status = 504
