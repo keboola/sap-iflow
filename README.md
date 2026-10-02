@@ -14,7 +14,7 @@ Setup, configuration, authentication and troubleshooting are covered in the
 | Artifact | ID | Version | Required | Purpose |
 |---|---|---|---|---|
 | Query Available Services from SAP S4HANA | `QueryAvailableServicesFromSAPS4HANA` | 1.1.0 | optional | Lists the OData services the SAP communication user can reach, read through the flow's own connections |
-| SAP S4HANA Service Addresses for Keboola (value mapping) | `KeboolaServiceAddresses` | 1.0.0 | optional, with the catalogue on SAP S/4HANA Cloud | Address book of OData V4 service paths and titles; rows are added in the value mapping editor, no flow is edited |
+| SAP S4HANA Service Addresses for Keboola (value mapping) | `KeboolaServiceAddresses` | 1.0.0 | optional, with the catalog flow on SAP S/4HANA Cloud | Address book of OData V4 service paths and titles; rows are added in the value mapping editor, no flow is edited |
 | Query Business Data from SAP S4HANA to Keboola | `KeboolaODataConnector` | 1.1.0 | required for the extractor | Read-only OData endpoint for Keboola's SAP extractor |
 | Deliver Business Data from SAP S4HANA to Keboola | `DeliverBusinessDataFromSAPS4HANAToKeboola` | 1.1.0 | optional | Reads S/4HANA on a schedule or on request and writes into a Keboola Storage table |
 | Keboola adapter | `Keboola` | 1.0.0 | optional | Receiver adapter that writes CSV into a Keboola Storage table |
@@ -110,10 +110,10 @@ pull request and on every push to `main` or a `release/` branch, and checks that
 ## Changes in 1.1.0
 
 Version 1.1.0 answers Keboola's review of 1.0.0; the ids are the review's. The Integration
-Guide's change log has the detail.
+Guide's change log lists the changes by flow.
 
 - B1: the sign-in method to SAP S/4HANA is a Configure value, `S4_AUTH_METHOD`, on every receiver.
-- B2, B3, M8, M9: the catalogue reads SAP only through the receiver adapters: no probing with data reads, no cache, no embedded service list.
+- B2, B3, M8, M9: the catalog flow reads SAP only through the receiver adapters: no probing with data reads, no cache, no embedded service list.
 - B4: the user role of every endpoint is a Configure value, `SENDER_ROLE`; `?debug=1` answers only with `CATALOG_DIAGNOSTICS=true`.
 - M1: the adapter is unchanged and optional; the delivery flow does not depend on it.
 - M2, M3: the write path towards Keboola is unchanged and documented with the tested numbers.
