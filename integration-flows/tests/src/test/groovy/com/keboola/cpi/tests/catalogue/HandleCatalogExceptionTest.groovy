@@ -11,7 +11,7 @@ import static com.keboola.cpi.tests.Scripts.message
 
 // handleCatalogException.groovy: the catalogue's error answer — the prefixes of the build script,
 // the platform's failures, the custom statuses, messageId in every body. The same script runs in
-// the main process and inside both local processes (F-08).
+// the main process and inside both local processes.
 class HandleCatalogExceptionTest {
 
     Script script
@@ -80,9 +80,9 @@ class HandleCatalogExceptionTest {
         return cause
     }
 
-    // 1.1.0: a NullPointerException is a sign-in fault only when the platform threw it while
+    // A NullPointerException is a sign-in fault only when the platform threw it while
     // preparing the sign-in (the class that threw it names the credential handling);
-    // the three credential texts count whatever the class (the connector's D11-C1 shape).
+    // the three credential texts count whatever the class.
     @Test
     void aMissingSecurityMaterialNamesTheSignInParameters() {
         [thrownAt(new NullPointerException(), "com.sap.it.rt.adapter.odata.oauth.cache.provider.OauthTokenProviderFactory", "getOauthCacheHandler"),

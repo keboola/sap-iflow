@@ -91,7 +91,6 @@ class CommitWatermarkTest {
         assert logs.logOf(m).properties["DeliveryNotes"] == "table in.c-sap.business_partners: exists"
     }
 
-    // 1.1.0 (M6): a watermark that could not be saved is a status of its own, never silent
     @Test
     void failedWatermarkWriteIsDeliveredWatermarkFailed() {
         Factory.register(DataStoreService, [put: { DataBean bean, DataConfig config ->
@@ -119,7 +118,7 @@ class CommitWatermarkTest {
         assert logs.logOf(m).attachments["WatermarkError"] != null
     }
 
-    // 1.1.0 (M4): a final failure is the outcome the Router sends to the Escalation End Event
+    // A final failure is the outcome the Router sends to the Escalation End Event
     @Test
     void finalFailureEndsFailedWithTheErrorBody() {
         def m = commit([RUN_FAILED: "KEBOOLA_FAILED", RUN_FAILED_DETAIL: "Target table in.c-sap.x creation failed (HTTP 404): no bucket",
@@ -149,7 +148,7 @@ class CommitWatermarkTest {
         assert m.getProperty("SAP_MessageProcessingLogCustomStatus") == "UPSTREAM_FAILED"
     }
 
-    // The page ceiling: pages left over when the loop stopped is a CONFIG_ERROR, and a final failure
+    // The page ceiling
     @Test
     void pagesLeftAtTheCeilingAreAConfigError() {
         def m = commit([MORE_PAGES: "true", PAGE_NUMBER: "99999", ROWS_DELIVERED: "99999000"])

@@ -61,8 +61,6 @@ class PreparePageTest {
         assert script.truncate("", "day") == ""
     }
 
-    // 1.0.0 behaviour: the window starts a day before the watermark at day precision and
-    // exactly at the watermark at second precision (no overlap yet)
     @Test
     void lowerBoundStartsADayEarlyAtDayPrecisionOnly() {
         assert script.lowerBound("2026-09-30T10:11:12", "day") == "2026-09-29T00:00:00"
@@ -82,7 +80,7 @@ class PreparePageTest {
         assert script.literal("2026-09-30T10:11:12", "date", true) == "2026-09-30"
     }
 
-    // 1.1.0 (M6): at second precision the window starts DELTA_OVERLAP_MINUTES before the watermark
+    // At second precision the window starts DELTA_OVERLAP_MINUTES before the watermark
     @Test
     void lowerBoundOverlapsAtSecondPrecision() {
         assert script.lowerBound("2026-09-30T10:11:12", "second", 15L) == "2026-09-30T09:56:12"

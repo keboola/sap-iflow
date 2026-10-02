@@ -28,7 +28,6 @@ class OdataToCsvTest {
         return message(properties: [PAGE_NUMBER: "1"] + properties, body: body)
     }
 
-    // csvEscape
     @Test
     void escapesOnlyWhatCsvNeeds() {
         assert script.csvEscape("plain") == "plain"
@@ -40,7 +39,7 @@ class OdataToCsvTest {
         assert script.csvEscape("") == ""
     }
 
-    // normaliseDate — 1.1.0: no time zone suffix, SAP's value carries none; the offset of /Date(ms+0100)/ ignored
+    // SAP's /Date(ms)/ carries no time zone, so the text carries none; an offset as in /Date(ms+0100)/ is ignored
     @Test
     void edmDateTimeBecomesIsoWithoutZone() {
         assert script.normaliseDate("/Date(1696032000000)/") == "2023-09-30T00:00:00"
@@ -52,7 +51,6 @@ class OdataToCsvTest {
         assert script.normaliseDate("/Date(abc)/") == "/Date(abc)/"
     }
 
-    // normaliseTime — 1.1.0: fractional seconds kept, missing parts count as zero
     @Test
     void edmTimeBecomesClockTime() {
         assert script.normaliseTime("PT10H20M30S") == "10:20:30"
@@ -68,7 +66,7 @@ class OdataToCsvTest {
         assert script.normaliseTime("10:20:30") == "10:20:30"
     }
 
-    // longColumnOf — Keboola's 64-character limit on a column name
+    // Keboola's limit on a column name is 64 characters
     @Test
     void columnNamesOverSixtyFourCharactersAreFound() {
         def ok = "A" * 64
@@ -78,7 +76,6 @@ class OdataToCsvTest {
         assert script.longColumnOf([]) == null
     }
 
-    // render
     @Test
     void rendersScalarsAsText() {
         assert script.render(null) == ""
@@ -208,7 +205,6 @@ class OdataToCsvTest {
         }
     }
 
-    // 1.1.0: a flattened name over 64 characters ends the run as KEBOOLA_FAILED before any import
     @Test
     void columnOverSixtyFourCharactersEndsTheRunBeforeAnyImport() {
         def name = "Address_" + ("X" * 60)
@@ -259,9 +255,9 @@ class OdataToCsvTest {
 
     @Test
     void columnsFollowTheFieldOrderOfTheFirstRow() {
-        // Groovy 2.4's JsonSlurper keeps the field order only on Java 8, the runtime's Java
-        // (F11-R2); on a newer JDK it sorts the names, so the check runs on Java 8 only.
-        assumeTrue("needs Java 8, see F11-R2", keysStayInOrder())
+        // Groovy 2.4's JsonSlurper keeps the field order only on Java 8, the runtime's Java;
+        // on a newer JDK it sorts the names, so the check runs on Java 8 only.
+        assumeTrue("needs Java 8: on a newer JDK JsonSlurper sorts the field names", keysStayInOrder())
         def m = page([:], '{"d":{"results":[{"Z":"1","A":"2","M":"3"}]}}')
         script.processData(m)
         assert m.getBody() == "Z,A,M\n1,2,3\n"
@@ -377,7 +373,6 @@ class OdataToCsvTest {
         assert m.getProperty("SKIP_PAGE_IDENTITY") == "u1|u2|2"
     }
 
-    // First data page
     @Test
     void firstDataPageIsRememberedOnce() {
         def m = page([PAGE_NUMBER: "3", FIRST_DATA_PAGE: "2", DLV_select: "Id"], V2_PAGE)

@@ -11,7 +11,6 @@ class Scripts {
     static final String CATALOGUE = "QueryAvailableServicesFromSAPS4HANA"
     static final String DELIVERY = "DeliverBusinessDataFromSAPS4HANAToKeboola"
 
-    // Script root
     static File root() {
         String configured = System.getProperty("scripts.root", "..")
         File dir = new File(configured)
@@ -25,7 +24,6 @@ class Scripts {
         return new File(root(), artifactId + "/src/main/resources/script/" + script + ".groovy")
     }
 
-    // Script loading
     static Script load(String artifactId, String script, MessageLogFactory logs = new MessageLogFactory()) {
         File source = file(artifactId, script)
         assert source.isFile() : "script not found: " + source + " (set -Dscripts.root to the folder that holds " + artifactId + ")"
@@ -34,7 +32,6 @@ class Scripts {
         return new GroovyShell(binding).parse(source)
     }
 
-    // Message building
     static Message message(Map args = [:]) {
         Message message = new Message()
         (args.properties ?: [:]).each { key, value -> message.setProperty(key.toString(), value) }
@@ -43,7 +40,6 @@ class Scripts {
         return message
     }
 
-    // Expected failures
     static Throwable failure(Closure work) {
         try {
             work.call()

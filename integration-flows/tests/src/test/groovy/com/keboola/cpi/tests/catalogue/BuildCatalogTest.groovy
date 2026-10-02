@@ -48,7 +48,6 @@ class BuildCatalogTest {
         ITApiFactory.reset()
     }
 
-    // Fixtures
     static Map arrangement(String uuid, String scenario) { return [uuid: uuid, scenario: scenario] }
     static Map inbound(String uuid, String id, String type, boolean hidden = false) { return [uuid: uuid, id: id, type: type, hidden: hidden] }
     static Map user(String uuid, String name, String client = "") { return [uuid: uuid, user: name, client: client] }
@@ -83,7 +82,6 @@ class BuildCatalogTest {
 
     static Map rowOf(Message m, String name) { return m.getProperty("CATALOG_ROWS").find { it.ID == name } }
 
-    // Service names
     @Test
     void namesStripTheArrangementSuffixes() {
         assert script.serviceKey("API_PRODUCT_G4BA", "G4BA") == [base: "API_PRODUCT", version: "0001"]
@@ -95,7 +93,6 @@ class BuildCatalogTest {
         assert script.stripServiceSuffix("API_GLACCOUNTINCHARTOFACCOUNTS_SRV_0001_", "IWSG") == "API_GLACCOUNTINCHARTOFACCOUNTS_SRV"
     }
 
-    // The four naming rules
     @Test
     void candidatesFollowTheFourNamingRules() {
         assert script.candidatesFor("API_PRODUCT", "0001") == [
@@ -113,7 +110,6 @@ class BuildCatalogTest {
         assert script.candidatesFor("API_PRODUCT", "0001").size() <= 4
     }
 
-    // The value mapping: the version key first, then the plain name
     @Test
     void lookupTriesTheVersionKeyThenThePlainName() {
         def api = ITApiFactory.getApi(ValueMappingApi, null)

@@ -27,7 +27,6 @@ class PlanCatalogReadTest {
         return m
     }
 
-    // The plan as shipped
     @Test
     void theShippedDefaultsPlanArrangementsFirst() {
         def m = plan()

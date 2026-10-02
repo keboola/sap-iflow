@@ -59,7 +59,6 @@ class StartRunTest {
         assert log.properties["RunStartedAt"] == "2026-09-30T02:00:00"
     }
 
-    // 1.1.0 (M6): the trigger's failed watermark read reaches the worker's log and its notes
     @Test
     void failedWatermarkReadIsCarriedIntoTheWorker() {
         def m = start([watermark: "", watermarkNote: "read failed: store down"])

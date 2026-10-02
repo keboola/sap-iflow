@@ -31,7 +31,6 @@ class LogIncomingTest {
         return m
     }
 
-    // Path normalisation
     @Test
     void pathsAreNormalisedBeforeTheyAreChecked() {
         assert script.normalizePath("") == "/"
@@ -119,7 +118,7 @@ class LogIncomingTest {
         def noProtocol = incoming(properties: [CFG_S4_HOSTNAME: "s4hana.virtual:44300", CFG_PROXY_TYPE: "sapcc"])
         assert noProtocol.getProperty("KEBOOLA_REJECT_REASON") == "CONFIG_ERROR"
         assert noProtocol.getProperty("KEBOOLA_REJECT_DETAIL").startsWith("S4_HOSTNAME must start with http:// followed by the virtual host")
-        // https through the tunnel is left to the platform's own refusal (F-33), not this step's
+        // https through the tunnel is left to the platform's own refusal, not this step's
         assert incoming(properties: [CFG_S4_HOSTNAME: "https://s4hana.virtual:44300", CFG_PROXY_TYPE: "sapcc"]).getProperty("KEBOOLA_REJECT_REASON") == null
     }
 

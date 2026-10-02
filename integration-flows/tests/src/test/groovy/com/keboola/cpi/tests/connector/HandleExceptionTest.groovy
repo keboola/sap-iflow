@@ -101,9 +101,9 @@ class HandleExceptionTest {
         return cause
     }
 
-    // 1.1.0: a NullPointerException is a sign-in fault only when the platform threw it while
+    // A NullPointerException is a sign-in fault only when the platform threw it while
     // preparing the sign-in (the class that threw it names the credential handling);
-    // the two credential texts count whatever the class.
+    // the three credential texts count whatever the class.
     @Test
     void missingCredentialIsReportedAsSignInNotPrepared() {
         [thrownAt(new NullPointerException(), "com.sap.it.rt.adapter.http.api.auth.OAuth2ClientCredentialsHandler", "getToken"),

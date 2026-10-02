@@ -51,7 +51,6 @@ class AnswerCatalogTest {
 
     static Map parsed(Message m) { return new JsonSlurper().parseText(m.getBody().toString()).d }
 
-    // Sort and markers
     @Test
     void apiServicesComeFirstThenTheRestAlphabetically() {
         def m = answer()
@@ -74,7 +73,6 @@ class AnswerCatalogTest {
         assert m.getHeaders()["ETag"] == null
     }
 
-    // OData version knob
     @Test
     void theOdataKnobKeepsOneKind() {
         def v2 = answer(CATALOG_ODATA: "v2")
@@ -113,7 +111,6 @@ class AnswerCatalogTest {
         assert all.getHeaders()["X-Keboola-Catalog-View"] == "all;shown=7;hidden=0"
     }
 
-    // Verified guesses and unlisted names
     @Test
     void verifiedGuessesJoinTheListAndTheRestIsNamed() {
         def queue = [

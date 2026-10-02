@@ -16,7 +16,6 @@ import static com.keboola.cpi.tests.Scripts.message
 // startDelivery.groovy: the start checks of a run and the envelope that goes on the queue.
 class StartDeliveryTest {
 
-    // 1.1.0 limits (M7): 5000 a page, 20000 at most
     static final String PAGE_SIZE_DEFAULT = "5000"
     static final long PAGE_SIZE_CEILING = 20000L
 
@@ -124,7 +123,6 @@ class StartDeliveryTest {
         assert e.select == ""
     }
 
-    // Method check
     @Test
     void onlyPostMayStartARun() {
         assert refused([:], [CamelHttpMethod: "GET"]) == "METHOD: GET"
@@ -233,7 +231,7 @@ class StartDeliveryTest {
         assert e.deltaPrecision == "hour"
     }
 
-    // 1.1.0 (M6): the overlap is checked with the other incremental settings, ignored on a full load
+    // The overlap is checked with the other incremental settings and ignored on a full load
     @Test
     void overlapIsWholeMinutesUpToAWeek() {
         def incremental = [CFG_LOAD_MODE: "incremental", CFG_DELTA_FIELD: "Changed", CFG_PRIMARY_KEY: "Id"]
@@ -247,7 +245,7 @@ class StartDeliveryTest {
         assert envelope(start([CFG_DELTA_OVERLAP_MINUTES: "ten"])).deltaOverlapMinutes == "0"
     }
 
-    // 1.1.0 (M6): a full load without a key pages without $orderby, and says so
+    // A full load without a key pages without $orderby, and says so
     @Test
     void fullLoadWithoutAKeyIsMarkedPagingUnsorted() {
         def m = start([CFG_PRIMARY_KEY: "Id"])
@@ -274,7 +272,6 @@ class StartDeliveryTest {
             CFG_KEBOOLA_TABLE_ID: "in.c-sap.other"])).watermark == ""
     }
 
-    // 1.1.0 (M6): a failed watermark read still means a full window, but it is visible
     @Test
     void unreadableWatermarkMeansAFullWindowAndSaysSo() {
         Factory.register(DataStoreService, [get: { String store, String id -> throw new IllegalStateException("store down") }] as DataStoreService)
