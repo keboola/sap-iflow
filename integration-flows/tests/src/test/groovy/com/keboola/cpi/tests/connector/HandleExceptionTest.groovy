@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 
 import static com.keboola.cpi.tests.Scripts.message
+import static com.keboola.cpi.tests.Scripts.thrownAt
 
 // handleException.groovy: the connector's error answer — status, code, body, monitor fields.
 class HandleExceptionTest {
@@ -93,12 +94,6 @@ class HandleExceptionTest {
         assert m.getHeaders()["Allow"] == null
         def bare = failed(new IllegalStateException("CONFIG: x"), [KEBOOLA_REJECT_REASON: "CONFIG_ERROR"])
         assert error(bare).message == "CONFIG: x"
-    }
-
-    // A Throwable thrown from a named place, the way the platform's own frames look.
-    static Throwable thrownAt(Throwable cause, String className, String method) {
-        cause.setStackTrace([new StackTraceElement(className, method, className + ".java", 42)] as StackTraceElement[])
-        return cause
     }
 
     // A NullPointerException is a sign-in fault only when the platform threw it while

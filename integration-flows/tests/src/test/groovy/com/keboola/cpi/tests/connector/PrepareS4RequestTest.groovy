@@ -2,7 +2,6 @@ package com.keboola.cpi.tests.connector
 
 import com.keboola.cpi.tests.Scripts
 import com.sap.gateway.ip.core.customdev.util.Message
-import com.sap.it.api.msglog.MessageLogFactory
 import org.junit.Before
 import org.junit.Test
 
@@ -16,7 +15,7 @@ class PrepareS4RequestTest {
 
     @Before
     void load() {
-        script = Scripts.load(Scripts.CONNECTOR, "prepareS4Request", new MessageLogFactory())
+        script = Scripts.load(Scripts.CONNECTOR, "prepareS4Request")
     }
 
     Message prepared(Map args = [:]) {

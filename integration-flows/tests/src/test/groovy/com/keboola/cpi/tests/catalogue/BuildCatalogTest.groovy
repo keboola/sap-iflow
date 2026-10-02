@@ -4,7 +4,6 @@ import com.keboola.cpi.tests.Scripts
 import com.sap.gateway.ip.core.customdev.util.Message
 import com.sap.it.api.ITApiFactory
 import com.sap.it.api.mapping.ValueMappingApi
-import com.sap.it.api.msglog.MessageLogFactory
 import com.sap.it.api.securestore.SecureStoreService
 import com.sap.it.api.securestore.UserCredential
 import org.junit.After
@@ -33,12 +32,10 @@ class BuildCatalogTest {
     ]
 
     Script script
-    MessageLogFactory logs
 
     @Before
     void load() {
-        logs = new MessageLogFactory()
-        script = Scripts.load(Scripts.CATALOGUE, "buildCatalog", logs)
+        script = Scripts.load(Scripts.CATALOGUE, "buildCatalog")
         ITApiFactory.register(ValueMappingApi, [getMappedValue: { a, i, v, ta, ti -> MAPPING[v + "|" + ti] }] as ValueMappingApi)
         ITApiFactory.register(SecureStoreService, [getUserCredential: { alias -> new UserCredential("KEBOOLA_USER", "x".toCharArray()) }] as SecureStoreService)
     }

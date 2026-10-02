@@ -48,4 +48,10 @@ class Scripts {
         }
         throw new AssertionError("expected an exception, the call returned normally")
     }
+
+    // A Throwable thrown from a named place, the way the platform's own frames look.
+    static Throwable thrownAt(Throwable cause, String className, String method) {
+        cause.setStackTrace([new StackTraceElement(className, method, className + ".java", 42)] as StackTraceElement[])
+        return cause
+    }
 }

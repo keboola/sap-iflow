@@ -2,7 +2,6 @@ package com.keboola.cpi.tests.catalogue
 
 import com.keboola.cpi.tests.Scripts
 import com.sap.gateway.ip.core.customdev.util.Message
-import com.sap.it.api.msglog.MessageLogFactory
 import org.junit.Before
 import org.junit.Test
 
@@ -22,13 +21,11 @@ class VerifyLoopTest {
 
     Script next
     Script record
-    MessageLogFactory logs
 
     @Before
     void load() {
-        logs = new MessageLogFactory()
-        next = Scripts.load(Scripts.CATALOGUE, "nextCandidate", logs)
-        record = Scripts.load(Scripts.CATALOGUE, "recordCandidate", logs)
+        next = Scripts.load(Scripts.CATALOGUE, "nextCandidate")
+        record = Scripts.load(Scripts.CATALOGUE, "recordCandidate")
     }
 
     Message fresh(Map overrides = [:]) {

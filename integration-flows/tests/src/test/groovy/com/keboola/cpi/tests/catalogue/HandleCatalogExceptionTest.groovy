@@ -8,6 +8,7 @@ import org.junit.Before
 import org.junit.Test
 
 import static com.keboola.cpi.tests.Scripts.message
+import static com.keboola.cpi.tests.Scripts.thrownAt
 
 // handleCatalogException.groovy: the catalogue's error answer — the prefixes of the build script,
 // the platform's failures, the custom statuses, messageId in every body. The same script runs in
@@ -72,12 +73,6 @@ class HandleCatalogExceptionTest {
         assert m.getHeaders()["Allow"] == "GET, HEAD"
         assert error(m).code == "METHOD_NOT_ALLOWED"
         assert m.getProperty("SAP_MessageProcessingLogCustomStatus") == "METHOD_NOT_ALLOWED"
-    }
-
-    // A Throwable thrown from a named place, the way the platform's own frames look.
-    static Throwable thrownAt(Throwable cause, String className, String method) {
-        cause.setStackTrace([new StackTraceElement(className, method, className + ".java", 42)] as StackTraceElement[])
-        return cause
     }
 
     // A NullPointerException is a sign-in fault only when the platform threw it while
