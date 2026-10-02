@@ -6,7 +6,10 @@ SAP Integration Suite content that connects SAP S/4HANA to the Keboola data plat
 published on the SAP Business Accelerator Hub as the integration package
 *SAP S/4HANA Integration with Keboola*, version 1.1.0.
 
-## Contents
+Setup, configuration, authentication and troubleshooting are covered in the
+[Integration Guide](docs/SAP-S4HANA-Integration-with-Keboola-Integration-Guide.pdf).
+
+## Artifacts
 
 | Artifact | ID | Version | Required | Purpose |
 |---|---|---|---|---|
@@ -15,6 +18,8 @@ published on the SAP Business Accelerator Hub as the integration package
 | Query Business Data from SAP S4HANA to Keboola | `KeboolaODataConnector` | 1.1.0 | required for the extractor | Read-only OData endpoint for Keboola's SAP extractor |
 | Deliver Business Data from SAP S4HANA to Keboola | `DeliverBusinessDataFromSAPS4HANAToKeboola` | 1.1.0 | optional | Reads S/4HANA on a schedule or on request and writes into a Keboola Storage table |
 | Keboola adapter | `Keboola` | 1.0.0 | optional | Receiver adapter that writes CSV into a Keboola Storage table |
+
+## Endpoints
 
 | Endpoint | Flow | Methods |
 |---|---|---|
@@ -44,9 +49,6 @@ docs/                    Integration Guide (PDF)
 - A Keboola project; for the delivery flow, a Storage token with write access to the target bucket
 
 ## Installation
-
-Setup, configuration, authentication and troubleshooting are covered in
-[`docs/SAP-S4HANA-Integration-with-Keboola-Integration-Guide.pdf`](docs/SAP-S4HANA-Integration-with-Keboola-Integration-Guide.pdf).
 
 1. Copy the package from the SAP Business Accelerator Hub, or create a package and add the
    three flow zips from `dist/` as integration flows, `dist/KeboolaServiceAddresses.zip` as a
@@ -99,43 +101,25 @@ cd integration-flows/tests
 mvn -q test
 ```
 
-[`integration-flows/tests/README.md`](integration-flows/tests/README.md) says how to add a
-test for a script. The GitHub Actions workflow
+[`integration-flows/tests/README.md`](integration-flows/tests/README.md) lists the test
+scenarios and says how to add a test for a script. The GitHub Actions workflow
 [`.github/workflows/build.yml`](.github/workflows/build.yml) runs both test suites on every
-push and pull request and checks that every zip in `dist/` matches its folder under
-`integration-flows/`.
+pull request and on every push to `main` or a `release/` branch, and checks that every zip in
+`dist/` matches its folder under `integration-flows/`.
 
 ## Changes in 1.1.0
 
-Version 1.1.0 answers Keboola's review of 1.0.0; the ids are the review's. The guide's change
-log (§12) has the detail.
+Version 1.1.0 answers Keboola's review of 1.0.0; the ids are the review's. The Integration
+Guide's change log has the detail.
 
-- B1: the sign-in method to SAP S/4HANA is a Configure value, `S4_AUTH_METHOD`, with the
-  credential name and the private key alias next to it, on every receiver; one build serves
-  OAuth 2.0 client credentials, Basic and a client certificate.
-- B2, B3, M8, M9: the catalogue is rebuilt: every read of SAP goes through the receiver
-  adapters; no probing with data reads, no parallel requests, no authorization check, no
-  cache, no embedded service list; V4 addresses on SAP S/4HANA Cloud come from the value
-  mapping, a name it does not know is verified with at most four small service-document reads
-  (`CATALOG_RESOLVE_V4`, `CATALOG_VERIFY_LIMIT`); one call finishes under 50 seconds; a wrong
-  host is a `500 CONFIG_ERROR`, never an empty list.
-- B4: the user role of every endpoint is a Configure value, `SENDER_ROLE`; the catalogue's
-  `?mode`, `?nocache` and `?filter` switches are gone and `?debug=1` answers only with
-  `CATALOG_DIAGNOSTICS=true`.
+- B1: the sign-in method to SAP S/4HANA is a Configure value, `S4_AUTH_METHOD`, on every receiver.
+- B2, B3, M8, M9: the catalogue reads SAP only through the receiver adapters: no probing with data reads, no cache, no embedded service list.
+- B4: the user role of every endpoint is a Configure value, `SENDER_ROLE`; `?debug=1` answers only with `CATALOG_DIAGNOSTICS=true`.
 - M1: the adapter is unchanged and optional; the delivery flow does not depend on it.
-- M4: a final failure of a delivery run ends Escalated, with its custom status kept.
-- M5: `DELIVERY_ADDRESS` and `DELIVERY_SCHEDULE` are Configure values; a copy of the flow
-  deploys next to the original; a deploy starts no run.
-- M6: `DELTA_OVERLAP_MINUTES` for incremental loading at second precision; a watermark that
-  cannot be read or written is named in the monitor; a full load without a key is marked
-  `PagingUnsorted`; deletions are documented as not carried over.
-- M7: `PAGE_SIZE` ships as 5000 and is capped at 20000; the tested volumes are in the guide.
 - M2, M3: the write path towards Keboola is unchanged and documented with the tested numbers.
-- M10: unit tests for the Groovy scripts (`integration-flows/tests`) and the GitHub Actions
-  build.
-- Minor items: `CONNECTOR_PATH_PREFIXES`; explicit request-header lists on the receivers; a
-  `NullPointerException` is a sign-in fault only by the place it was thrown, otherwise
-  `CONNECTOR_ERROR` or `CATALOG_ERROR`; `camel-core` is `provided` and ignored by Dependabot;
-  dates without a time zone suffix, fractional seconds kept, column names over 64 characters
-  refused before any import; the guide gained the Keboola side, alerting, credential
-  rotation, support and responsibilities and a change log.
+- M4: a final failure of a delivery run ends Escalated, with its custom status kept.
+- M5: `DELIVERY_ADDRESS` and `DELIVERY_SCHEDULE` are Configure values; a deploy starts no run.
+- M6: `DELTA_OVERLAP_MINUTES` for incremental loading at second precision; watermark failures are named in the monitor.
+- M7: `PAGE_SIZE` ships as 5000 and is capped at 20000.
+- M10: unit tests for the Groovy scripts (`integration-flows/tests`) and the GitHub Actions build.
+- Minor items: `CONNECTOR_PATH_PREFIXES`, explicit request-header lists on the receivers, the `CONNECTOR_ERROR` and `CATALOG_ERROR` codes, CSV dates without a time zone suffix.
