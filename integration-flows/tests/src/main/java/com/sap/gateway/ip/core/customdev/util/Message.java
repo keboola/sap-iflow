@@ -12,13 +12,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Test stand-in for the Cloud Integration message: body, headers, properties, attachments. */
+/** Test stand-in for the Cloud Integration message: body, headers, properties. */
 public class Message {
 
     private Object body;
-    private Map<String, Object> headers = new LinkedHashMap<String, Object>();
-    private Map<String, Object> properties = new LinkedHashMap<String, Object>();
-    private Map<String, Object> attachments = new LinkedHashMap<String, Object>();
+    private final Map<String, Object> headers = new LinkedHashMap<String, Object>();
+    private final Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
     public Object getBody() {
         return body;
@@ -63,21 +62,9 @@ public class Message {
         return headers;
     }
 
-    public void setHeaders(final Map<String, Object> headers) {
-        this.headers = headers;
-    }
-
     /** A null value is kept as a header with no value, as the runtime does. */
     public void setHeader(final String name, final Object value) {
         headers.put(name, value);
-    }
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(final Map<String, Object> properties) {
-        this.properties = properties;
     }
 
     public void setProperty(final String name, final Object value) {
@@ -86,14 +73,6 @@ public class Message {
 
     public Object getProperty(final String name) {
         return properties.get(name);
-    }
-
-    public Map<String, Object> getAttachments() {
-        return attachments;
-    }
-
-    public void setAttachments(final Map<String, Object> attachments) {
-        this.attachments = attachments;
     }
 
     private static Object fromText(final String text, final Class<?> type) {

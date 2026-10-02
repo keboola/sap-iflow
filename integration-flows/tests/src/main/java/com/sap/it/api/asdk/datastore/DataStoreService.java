@@ -6,6 +6,4 @@ public interface DataStoreService {
     DataBean get(String storeName, String id);
 
     void put(DataBean bean, DataConfig config);
-
-    void delete(String storeName, String id);
 }

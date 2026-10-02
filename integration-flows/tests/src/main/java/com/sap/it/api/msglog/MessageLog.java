@@ -1,6 +1,5 @@
 package com.sap.it.api.msglog;
 
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,30 +38,6 @@ public class MessageLog {
         properties.put(name, value);
     }
 
-    public void setIntegerProperty(final String name, final Integer value) {
-        properties.put(name, value);
-    }
-
-    public void setLongProperty(final String name, final Long value) {
-        properties.put(name, value);
-    }
-
-    public void setFloatProperty(final String name, final Float value) {
-        properties.put(name, value);
-    }
-
-    public void setDoubleProperty(final String name, final Double value) {
-        properties.put(name, value);
-    }
-
-    public void setBooleanProperty(final String name, final Boolean value) {
-        properties.put(name, value);
-    }
-
-    public void setDateProperty(final String name, final Date value) {
-        properties.put(name, value);
-    }
-
     public void addAttachmentAsString(final String name, final String content, final String mediaType) {
         attachments.put(name, new Attachment(content, mediaType));
     }
@@ -72,7 +47,7 @@ public class MessageLog {
         return customHeaderProperties;
     }
 
-    /** Values written with set*Property. */
+    /** Values written with setStringProperty. */
     public Map<String, Object> getProperties() {
         return properties;
     }
