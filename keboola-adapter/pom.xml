@@ -10,7 +10,7 @@
 
   <properties>
     <camel.version>3.14.7</camel.version>
-    <adk.version>2.3.0</adk.version>
+    <adk.version>3.1.0</adk.version>
     <sap.api.version>3.16.0</sap.api.version>
   </properties>
 
