@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: KeboolaServiceAddresses
+Bundle-ManifestVersion: 2
+Origin-Bundle-SymbolicName: KeboolaServiceAddresses
+Origin-Bundle-Version: 1.0.0
+Import-Package: com.sap.xi.mapping.camel.valmap
+Origin-Bundle-Name: SAP S4HANA Service Addresses for Keboola
+Bundle-Name: SAP S4HANA Service Addresses for Keboola
+Bundle-Version: 1.0.0
+Bundle-Activator: com.sap.xi.mapping.camel.valmap.ValueMappingActivato
+ r
+SAP-NodeType: IFLMAP
+SAP-BundleType: ValueMapping
+Import-Service: 
+

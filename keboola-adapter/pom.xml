@@ -20,10 +20,12 @@
       <artifactId>com.sap.cloud.adk.build.archive</artifactId>
       <version>${adk.version}</version>
     </dependency>
+    <!-- Camel comes from the Cloud Integration runtime -->
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
       <version>${camel.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- SAP runtime APIs -->
     <dependency>
@@ -49,14 +51,8 @@
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
+      <artifactId>slf4j-nop</artifactId>
       <version>1.6.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

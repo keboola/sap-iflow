@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /keboola-adapter
+    schedule:
+      interval: weekly
+    ignore:
+      # Camel comes from the Cloud Integration runtime; the adapter builds against its version
+      - dependency-name: "org.apache.camel:*"

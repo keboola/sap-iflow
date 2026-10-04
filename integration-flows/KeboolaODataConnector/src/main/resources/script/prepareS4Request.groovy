@@ -13,6 +13,10 @@ def Message processData(Message message) {
         def detail = message.getProperty("KEBOOLA_REJECT_DETAIL")?.toString() ?: "unknown"
         throw new IllegalStateException(
             "HTTP method ${detail} is not supported by this connector. Allowed: GET, HEAD.")
+    } else if (rejectReason == "PATH_NOT_ALLOWED") {
+        throw new IllegalStateException("PATH: " +
+            (message.getProperty("KEBOOLA_REJECT_DETAIL")?.toString() ?: "unknown") +
+            " is outside CONNECTOR_PATH_PREFIXES.")
     } else if (rejectReason) {
         throw new IllegalStateException(
             "CONFIG: " + (message.getProperty("KEBOOLA_REJECT_DETAIL")?.toString()

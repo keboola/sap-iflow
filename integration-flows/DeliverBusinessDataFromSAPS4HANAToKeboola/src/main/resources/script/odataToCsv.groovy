@@ -9,11 +9,12 @@ static String csvEscape(String value) {
     return value
 }
 
+// SAP's /Date(ms)/ carries no time zone, so the text carries none either (1.1.0).
 static String normaliseDate(String value) {
     def matcher = (value =~ /^\/Date\((-?\d+)([+-]\d+)?\)\/$/)
     if (!matcher.matches()) { return value }
     try {
-        def format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        def format = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
         format.setTimeZone(TimeZone.getTimeZone("UTC"))
         return format.format(new Date(Long.parseLong(matcher.group(1))))
     } catch (Exception ignored) {
@@ -22,10 +23,16 @@ static String normaliseDate(String value) {
 }
 
 static String normaliseTime(String value) {
-    def matcher = (value =~ /^PT(\d+)H(\d+)M(\d+)S$/)
-    if (!matcher.matches()) { return value }
-    return String.format("%02d:%02d:%02d", matcher.group(1).toInteger(),
-                         matcher.group(2).toInteger(), matcher.group(3).toInteger())
+    def matcher = (value =~ /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)(\.\d+)?S)?$/)
+    if (!matcher.matches() || value == "PT") { return value }
+    def part = { String s -> s ? s.toInteger() : 0 }
+    return String.format("%02d:%02d:%02d", part(matcher.group(1)), part(matcher.group(2)),
+                         part(matcher.group(3))) + (matcher.group(4) ?: "")
+}
+
+// Keboola refuses a column name over 64 characters; a flattened name can reach that (1.1.0).
+static String longColumnOf(List names) {
+    return names.find { it.length() > 64 }
 }
 
 static String render(Object value) {
@@ -80,8 +87,8 @@ static String pageIdentity(List rows, List keyNames = null) {
     return first + "|" + last + "|" + rows.size()
 }
 
-static Message endRun(Message message, String detail) {
-    message.setProperty("RUN_FAILED", "UPSTREAM_FAILED")
+static Message endRun(Message message, String detail, String code = "UPSTREAM_FAILED") {
+    message.setProperty("RUN_FAILED", code)
     message.setProperty("RUN_FAILED_DETAIL", detail)
     message.setProperty("MORE_PAGES", "false")
     message.setProperty("ROWS_IN_PAGE", "0")
@@ -188,6 +195,14 @@ def Message processData(Message message) {
         message.setProperty("CSV_COLUMNS", columns)
     }
     def names = columns ? columns.split(",").collect { it.trim() }.findAll { it } : []
+
+    // Column length
+    def longColumn = longColumnOf(names)
+    if (longColumn) {
+        return endRun(message, "Column '" + longColumn + "' is " + longColumn.length() + " characters long; " +
+            "Keboola allows 64. Nothing was imported. Leave the field out with ODATA_SELECT, or read a " +
+            "service whose field names are shorter.", "KEBOOLA_FAILED")
+    }
 
     // CSV output
     def out = new StringBuilder()

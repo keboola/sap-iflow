@@ -15,11 +15,18 @@ static String truncate(String timestamp, String precision) {
     return timestamp.substring(0, 10) + "T00:00:00"
 }
 
-static String lowerBound(String watermark, String precision) {
+static String lowerBound(String watermark, String precision, long overlapMinutes = 0L) {
     String start = truncate(watermark, precision)
-    if (precision != "day" || !start || start.length() < 10) { return start }
+    if (!start || start.length() < 10) { return start }
     try {
-        return java.time.LocalDate.parse(start.substring(0, 10)).minusDays(1).toString() + "T00:00:00"
+        if (precision == "day") {
+            return java.time.LocalDate.parse(start.substring(0, 10)).minusDays(1).toString() + "T00:00:00"
+        }
+        if (overlapMinutes > 0L && start.length() >= 19) {
+            return java.time.LocalDateTime.parse(start.substring(0, 19)).minusMinutes(overlapMinutes)
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+        }
+        return start
     } catch (Exception ignored) {
         return start
     }
@@ -35,11 +42,11 @@ static String literal(String timestamp, String fieldType, boolean v4) {
 }
 
 static String deltaClause(String field, String watermark, String runStartedAt,
-                          String fieldType, String precision, boolean v4) {
+                          String fieldType, String precision, boolean v4, long overlapMinutes = 0L) {
     def names = (field ?: "").split(",").collect { it.trim() }.findAll { it }
     def windows = names.collect { name ->
         def parts = []
-        if (watermark) { parts << (name + " ge " + literal(lowerBound(watermark, precision), fieldType, v4)) }
+        if (watermark) { parts << (name + " ge " + literal(lowerBound(watermark, precision, overlapMinutes), fieldType, v4)) }
         if (runStartedAt) { parts << (name + " le " + literal(truncate(runStartedAt, precision), fieldType, v4)) }
         return parts.join(" and ")
     }.findAll { it }
@@ -131,16 +138,25 @@ def Message processData(Message message) {
     def filter = message.getProperty("DLV_filter")?.toString() ?: ""
     if (filter) { filters << ("(" + filter + ")") }
     if ((message.getProperty("DLV_loadMode")?.toString() ?: "full") == "incremental") {
-        def clause = deltaClause(message.getProperty("DLV_deltaField")?.toString(),
-                                 message.getProperty("DLV_watermark")?.toString(),
+        def precision = message.getProperty("DLV_deltaPrecision")?.toString() ?: "day"
+        long overlapMinutes = 0L
+        try { overlapMinutes = Long.parseLong(message.getProperty("DLV_deltaOverlapMinutes")?.toString() ?: "0") }
+        catch (Exception ignored) { }
+        def watermark = message.getProperty("DLV_watermark")?.toString()
+        def clause = deltaClause(message.getProperty("DLV_deltaField")?.toString(), watermark,
                                  message.getProperty("DLV_runStartedAt")?.toString(),
                                  message.getProperty("DLV_deltaFieldType")?.toString() ?: "datetime",
-                                 message.getProperty("DLV_deltaPrecision")?.toString() ?: "day", v4)
+                                 precision, v4, overlapMinutes)
         if (clause) {
             filters << ("(" + clause + ")")
             if (page == 1L) {
                 def messageLog = messageLogFactory.getMessageLog(message)
-                if (messageLog != null) { messageLog.addCustomHeaderProperty("DeltaWindow", clause.take(500)) }
+                if (messageLog != null) {
+                    messageLog.addCustomHeaderProperty("DeltaWindow", clause.take(500))
+                    if (watermark && precision == "second") {
+                        messageLog.addCustomHeaderProperty("DeltaOverlap", overlapMinutes + " min before " + watermark)
+                    }
+                }
             }
         }
     }

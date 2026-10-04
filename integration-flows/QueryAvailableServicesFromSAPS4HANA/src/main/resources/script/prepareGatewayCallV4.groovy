@@ -13,20 +13,20 @@ def Message processData(Message message) {
     message.setProperty("GW_V2_BODY", message.getBody(String) ?: "")
 
     def query = "\$expand=DefaultSystem(\$expand=Services)"
-    def client = readCfg(message, "CFG_SAP_CLIENT")
-    if (client) { query += "&sap-client=" + client }
+    def extra = message.getProperty("CATALOG_QUERY_EXTRA")?.toString() ?: ""
+    if (extra) { query += "&" + extra }
 
     // Target path
     String path = "/sap/opu/odata4/iwfnd/config/default/iwfnd/catalog/0002/ServiceGroups"
-    String host = readCfg(message, "CFG_S4_HOSTNAME") ?: ""
-    message.setProperty("S4_TARGET_PATH", host.endsWith("/") ? path.substring(1) : path)
+    String hostRaw = readCfg(message, "CFG_S4_HOSTNAME") ?: ""
+    message.setProperty("S4_TARGET_PATH", hostRaw.endsWith("/") ? path.substring(1) : path)
     message.setProperty("S4_QUERY_STRING", query)
 
-    message.setHeader("CamelHttpPath", null)
-    message.setHeader("CamelHttpQuery", null)
-    message.setHeader("CamelHttpUri", null)
-    message.setHeader("CamelHttpUrl", null)
-    message.setHeader("CamelHttpResponseCode", null)
+    // The V2 answer's headers are cleared before the V4 call: nothing of one answer travels on
+    ["CamelHttpPath", "CamelHttpQuery", "CamelHttpUri", "CamelHttpUrl", "CamelHttpResponseCode",
+     "CamelHttpResponseText", "Content-Type", "Content-Length", "Content-Encoding", "Content-Language",
+     "ETag", "Last-Modified", "Cache-Control", "DataServiceVersion", "OData-Version", "sap-message",
+     "sap-messagescount", "Location", "Retry-After"].each { message.setHeader(it, null) }
     message.setHeader("CamelHttpMethod", "GET")
     message.setHeader("Accept", "application/json")
     message.setBody("")

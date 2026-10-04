@@ -1,0 +1,66 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+
+jobs:
+  adapter:
+    name: Adapter tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Test the adapter
+        run: mvn -B -q test
+        working-directory: keboola-adapter
+      - name: Test summary
+        if: always()
+        run: grep -h "Tests run" keboola-adapter/target/surefire-reports/*.txt
+
+  scripts:
+    name: Integration flow script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          # the Cloud Integration runtime's Java; Groovy 2.4.21 keeps JSON field order on it only
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+      - name: Test the scripts
+        run: mvn -B -q test
+        working-directory: integration-flows/tests
+      - name: Test summary
+        if: always()
+        run: grep -h "Tests run" integration-flows/tests/target/surefire-reports/*.txt
+
+  dist:
+    name: dist consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare every dist zip with its source folder
+        run: |
+          failed=0
+          for zip in dist/*.zip; do
+            id="$(basename "$zip" .zip)"
+            rm -rf "/tmp/dist-check/$id"
+            mkdir -p "/tmp/dist-check/$id"
+            unzip -q "$zip" -d "/tmp/dist-check/$id"
+            if diff -r "/tmp/dist-check/$id" "integration-flows/$id"; then
+              echo "$id: dist matches integration-flows/$id"
+            else
+              echo "$id: dist differs from integration-flows/$id"
+              failed=1
+            fi
+          done
+          exit $failed
